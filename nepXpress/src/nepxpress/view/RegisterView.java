@@ -10,6 +10,20 @@ import javax.swing.JLayeredPane;
 import javax.swing.GroupLayout;
 import javax.swing.LayoutStyle;
 import java.awt.Container;
+import java.awt.Color;
+import java.awt.Component;
+import javax.swing.JPanel;
+import javax.swing.JLabel;
+import javax.swing.JTextField;
+import javax.swing.JButton;
+import javax.swing.JToggleButton;
+import javax.swing.BoxLayout;
+import javax.swing.Box;
+import java.awt.Font;
+import javax.swing.border.Border;
+import javax.swing.border.BorderFactory;
+import java.awt.Cursor;
+import javax.swing.JPasswordField;
 
 /**
  *
@@ -75,12 +89,51 @@ public class RegisterView extends javax.swing.JFrame {
         }
     }
 
+    private class PlaceholderTextField extends javax.swing.JTextField {
+        private String placeholder;
+        private int radius;
+
+        public PlaceholderTextField(String placeholder, int radius) {
+            super();
+            this.placeholder = placeholder;
+            this.radius = radius;
+            setOpaque(false);
+        }
+
+        @Override
+        protected void paintComponent(java.awt.Graphics g) {
+            java.awt.Graphics2D g2 = (java.awt.Graphics2D) g.create();
+            g2.setRenderingHint(java.awt.RenderingHints.KEY_ANTIALIASING, java.awt.RenderingHints.VALUE_ANTIALIAS_ON);
+            g2.setColor(getBackground());
+            g2.fillRoundRect(0, 0, getWidth(), getHeight(), radius, radius);
+            g2.dispose();
+            
+            super.paintComponent(g);
+
+            if (getText().isEmpty() && placeholder != null) {
+                g2 = (java.awt.Graphics2D) g.create();
+                g2.setColor(new Color(150, 150, 150));
+                g2.setFont(getFont());
+                java.awt.FontMetrics metrics = g2.getFontMetrics();
+                int x = 15;
+                int y = (getHeight() - metrics.getHeight()) / 2 + metrics.getAscent();
+                g2.drawString(placeholder, x, y);
+                g2.dispose();
+            }
+        }
+    }
+
+    // Store the original login panel layout
+    private GroupLayout originalLayout;
+    private Component[] loginComponents;
+
     /**
      * Creates new form RegisterView
      */
     public RegisterView() {
         initComponents();
-        // Set window size and center it
+        originalLayout = (GroupLayout) jPanel2.getLayout();
+        loginComponents = jPanel2.getComponents();
         setSize(900, 600);
         setLocationRelativeTo(null);
         
@@ -102,7 +155,7 @@ public class RegisterView extends javax.swing.JFrame {
         jLabel3.addMouseListener(new java.awt.event.MouseAdapter() {
             @Override
             public void mouseClicked(java.awt.event.MouseEvent evt) {
-                new ForgotPasswordView().setVisible(true);
+                switchToForgotPassword();
             }
         });
     }
@@ -313,6 +366,126 @@ public class RegisterView extends javax.swing.JFrame {
 
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {
         // TODO add your handling code here:
+    }
+
+    private void switchToForgotPassword() {
+        // Store the current size of white panel
+        Dimension whiteBoxSize = jPanel2.getSize();
+        
+        // Create forgot password components
+        JPanel forgotPanel = new RoundedPanel(40);
+        forgotPanel.setBackground(Color.WHITE);
+        forgotPanel.setLayout(new GroupLayout(forgotPanel));
+        
+        // Title
+        JLabel titleLabel = new JLabel("Forgot Password");
+        titleLabel.setFont(new Font("Segoe UI", 0, 24));
+        
+        // Email field
+        PlaceholderTextField emailField = new PlaceholderTextField("Email Address", 25);
+        emailField.setFont(new Font("Segoe UI", 0, 14));
+        emailField.setBorder(javax.swing.BorderFactory.createEmptyBorder(5, 15, 5, 15));
+        emailField.setBackground(new Color(240, 240, 240));
+        
+        // Message
+        JLabel messageLabel = new JLabel("Once you have submitted the form, you will receive an email");
+        messageLabel.setFont(new Font("Segoe UI", 0, 12));
+        messageLabel.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+
+        JLabel messageLabel2 = new JLabel("if the given email address exist in our system.");
+        messageLabel2.setFont(new Font("Segoe UI", 0, 12));
+        messageLabel2.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+
+        // Reset button
+        JButton resetButton = new JButton("Reset");
+        resetButton.setBackground(new Color(206, 255, 137));
+        resetButton.setFont(new Font("Segoe UI", 0, 14));
+        resetButton.setForeground(Color.BLACK);
+        resetButton.setBorderPainted(false);
+        resetButton.setFocusPainted(false);
+
+        // Back to login link
+        JLabel backToLoginLabel = new JLabel("<html><u>Back to Login</u></html>");
+        backToLoginLabel.setFont(new Font("Segoe UI", 0, 12));
+        backToLoginLabel.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        backToLoginLabel.setForeground(new Color(76, 115, 13));
+        backToLoginLabel.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                switchToLogin();
+            }
+        });
+
+        // Setup GroupLayout
+        GroupLayout layout = (GroupLayout) forgotPanel.getLayout();
+        layout.setHorizontalGroup(
+            layout.createParallelGroup(GroupLayout.Alignment.CENTER)
+            .addGroup(layout.createSequentialGroup()
+                .addContainerGap(40, Short.MAX_VALUE)
+                .addGroup(layout.createParallelGroup(GroupLayout.Alignment.CENTER)
+                    .addComponent(titleLabel)
+                    .addComponent(emailField, GroupLayout.PREFERRED_SIZE, 293, GroupLayout.PREFERRED_SIZE)
+                    .addComponent(messageLabel)
+                    .addComponent(messageLabel2)
+                    .addComponent(resetButton, GroupLayout.PREFERRED_SIZE, 293, GroupLayout.PREFERRED_SIZE)
+                    .addComponent(backToLoginLabel))
+                .addContainerGap(40, Short.MAX_VALUE))
+        );
+        
+        layout.setVerticalGroup(
+            layout.createSequentialGroup()
+            .addGap(30)
+            .addComponent(titleLabel)
+            .addGap(30)
+            .addComponent(emailField, GroupLayout.PREFERRED_SIZE, 28, GroupLayout.PREFERRED_SIZE)
+            .addGap(20)
+            .addComponent(messageLabel)
+            .addGap(5)
+            .addComponent(messageLabel2)
+            .addGap(30)
+            .addComponent(resetButton, GroupLayout.PREFERRED_SIZE, 28, GroupLayout.PREFERRED_SIZE)
+            .addGap(20)
+            .addComponent(backToLoginLabel)
+            .addContainerGap(30, Short.MAX_VALUE)
+        );
+
+        // Remove all components from white panel
+        jPanel2.removeAll();
+        
+        // Add forgot password panel
+        jPanel2.setLayout(new BorderLayout());
+        jPanel2.add(forgotPanel, BorderLayout.CENTER);
+        
+        // Ensure the white panel maintains its size
+        jPanel2.setPreferredSize(whiteBoxSize);
+        jPanel2.setSize(whiteBoxSize);
+        
+        // Refresh the panel
+        jPanel2.revalidate();
+        jPanel2.repaint();
+    }
+
+    private void switchToLogin() {
+        // Store the current size
+        Dimension whiteBoxSize = jPanel2.getSize();
+        
+        // Remove all components from white panel
+        jPanel2.removeAll();
+        
+        // Restore original layout
+        jPanel2.setLayout(originalLayout);
+        
+        // Restore all original components
+        for (Component comp : loginComponents) {
+            jPanel2.add(comp);
+        }
+        
+        // Ensure the white panel maintains its size
+        jPanel2.setPreferredSize(whiteBoxSize);
+        jPanel2.setSize(whiteBoxSize);
+        
+        // Refresh the panel
+        jPanel2.revalidate();
+        jPanel2.repaint();
     }
 
     /**
