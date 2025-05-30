@@ -8,14 +8,17 @@ import java.awt.event.*;
 public class SignupView extends javax.swing.JFrame {
     
     private RoundedPanel mainPanel;
-    private JLabel titleLabel, subtitleLabel;
+    private JLabel titleLabel;
     private RoundedTextField firstNameField, surnameField, emailField;
     private RoundedPasswordField passwordField;
     private JComboBox<String> dayBox, monthBox, yearBox;
     private JRadioButton femaleRadio, maleRadio, customRadio;
+    private JRadioButton userRadio, riderRadio;
     private ButtonGroup genderGroup;
+    private ButtonGroup userTypeGroup;
     private JButton signUpButton;
     private JLabel loginLink;
+    private JLabel loginText;  // New label for "Already have an account?"
     
     public SignupView() {
         initComponents();
@@ -24,28 +27,31 @@ public class SignupView extends javax.swing.JFrame {
         setTitle("Create Account - nepXpress");
     }
     
+    // Add getter for main panel
+    public JPanel getMainPanel() {
+        return mainPanel;
+    }
+    
     private void initComponents() {
         setupCustomScrollBars();
         
         mainPanel = new RoundedPanel(40);
         mainPanel.setBackground(Color.WHITE);
+        mainPanel.setPreferredSize(new Dimension(600, 500));  // Set initial size
         
-        // Title and subtitle
+        // Title
         titleLabel = new JLabel("Create a new account");
         titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 24));
         titleLabel.setHorizontalAlignment(SwingConstants.CENTER);
         
-        subtitleLabel = new JLabel("It's quick and easy.");
-        subtitleLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        subtitleLabel.setForeground(new Color(100, 100, 100));
-        subtitleLabel.setHorizontalAlignment(SwingConstants.CENTER);
-        
-        // Name fields
+        // Name fields with equal width
         firstNameField = new RoundedTextField(25);
         firstNameField.setPlaceholder("First name");
+        firstNameField.setPreferredSize(new Dimension(140, 35));  // Set specific width
         
         surnameField = new RoundedTextField(25);
         surnameField.setPlaceholder("Surname");
+        surnameField.setPreferredSize(new Dimension(140, 35));  // Same width as first name
         
         // Email field
         emailField = new RoundedTextField(25);
@@ -82,18 +88,83 @@ public class SignupView extends javax.swing.JFrame {
         genderGroup.add(femaleRadio);
         genderGroup.add(maleRadio);
         genderGroup.add(customRadio);
+
+        // User type radio buttons
+        userRadio = new JRadioButton("Regular User");
+        riderRadio = new JRadioButton("Rider");
+        userRadio.setSelected(true);
+        
+        userTypeGroup = new ButtonGroup();
+        userTypeGroup.add(userRadio);
+        userTypeGroup.add(riderRadio);
+        
+        // Add action listener to rider radio button
+        riderRadio.addActionListener(e -> {
+            if (riderRadio.isSelected()) {
+                // Open rider signup view
+                RiderSignupView riderView = new RiderSignupView();
+                riderView.setVisible(true);
+                // Close current window
+                dispose();
+            }
+        });
         
         // Sign up button
         signUpButton = new JButton("Sign Up");
         signUpButton.setBackground(new Color(0, 164, 0));
         signUpButton.setForeground(Color.WHITE);
         signUpButton.setFocusPainted(false);
+        signUpButton.setPreferredSize(new Dimension(293, 35));  // Set specific width to match other fields
         
-        // Login link
-        loginLink = new JLabel("<html><u>Already have an account?</u></html>");
+        // Add click listener to signup button for animation
+        signUpButton.addActionListener(e -> animatePanel());
+        
+        // Login text and link in one panel
+        JPanel loginPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        loginPanel.setOpaque(false);  // Make panel transparent
+        
+        loginText = new JLabel("Already have an account? ");
+        loginText.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        loginText.setForeground(new Color(100, 100, 100));
+        
+        loginLink = new JLabel("Login");
+        loginLink.setFont(new Font("Segoe UI", Font.BOLD, 12));
         loginLink.setForeground(new Color(0, 102, 255));
-        loginLink.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        loginLink.setHorizontalAlignment(SwingConstants.CENTER);
+        
+        // Create a single clickable panel that contains both labels
+        JPanel clickablePanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
+        clickablePanel.setOpaque(false);
+        clickablePanel.add(loginText);
+        clickablePanel.add(loginLink);
+        clickablePanel.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        
+        // Add mouse listener to the entire clickable panel
+        clickablePanel.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                Container parent = mainPanel;
+                while (parent != null) {
+                    if (parent.getParent() instanceof RegisterView) {
+                        RegisterView registerView = (RegisterView) parent.getParent();
+                        registerView.switchToLogin();
+                        return;
+                    }
+                    parent = parent.getParent();
+                }
+            }
+            
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                loginLink.setText("<html><u>Login</u></html>");
+            }
+            
+            @Override
+            public void mouseExited(MouseEvent e) {
+                loginLink.setText("Login");
+            }
+        });
+        
+        loginPanel.add(clickablePanel);
         
         // Layout
         setLayout(new BorderLayout());
@@ -104,33 +175,27 @@ public class SignupView extends javax.swing.JFrame {
         gbc.gridx = 0;
         gbc.gridy = 0;
         gbc.gridwidth = 2;
-        gbc.insets = new Insets(10, 10, 5, 10);
+        gbc.insets = new Insets(20, 10, 20, 10);
         gbc.fill = GridBagConstraints.HORIZONTAL;
         mainPanel.add(titleLabel, gbc);
         
+        // Name fields in one row with equal width
+        JPanel namePanel = new JPanel(new GridLayout(1, 2, 10, 0));  // 1 row, 2 columns, 10px gap
+        namePanel.setOpaque(false);
+        namePanel.add(firstNameField);
+        namePanel.add(surnameField);
+        
         gbc.gridy = 1;
-        gbc.insets = new Insets(0, 10, 20, 10);
-        mainPanel.add(subtitleLabel, gbc);
-        
-        // Name fields in one row
-        gbc.gridy = 2;
-        gbc.gridwidth = 1;
-        gbc.insets = new Insets(5, 10, 5, 5);
-        mainPanel.add(firstNameField, gbc);
-        
-        gbc.gridx = 1;
-        gbc.insets = new Insets(5, 5, 5, 10);
-        mainPanel.add(surnameField, gbc);
+        gbc.insets = new Insets(5, 10, 5, 10);
+        mainPanel.add(namePanel, gbc);
         
         // Email field
-        gbc.gridx = 0;
-        gbc.gridy = 3;
-        gbc.gridwidth = 2;
+        gbc.gridy = 2;
         gbc.insets = new Insets(5, 10, 5, 10);
         mainPanel.add(emailField, gbc);
         
         // Password field
-        gbc.gridy = 4;
+        gbc.gridy = 3;
         mainPanel.add(passwordField, gbc);
         
         // Date selection
@@ -139,7 +204,7 @@ public class SignupView extends javax.swing.JFrame {
         datePanel.add(dayBox);
         datePanel.add(monthBox);
         datePanel.add(yearBox);
-        gbc.gridy = 5;
+        gbc.gridy = 4;
         mainPanel.add(datePanel, gbc);
         
         // Gender radio buttons
@@ -148,30 +213,33 @@ public class SignupView extends javax.swing.JFrame {
         genderPanel.add(femaleRadio);
         genderPanel.add(maleRadio);
         genderPanel.add(customRadio);
-        gbc.gridy = 6;
+        gbc.gridy = 5;
         mainPanel.add(genderPanel, gbc);
+
+        // User type radio buttons
+        JPanel userTypePanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        userTypePanel.add(new JLabel("Account Type"));
+        userTypePanel.add(userRadio);
+        userTypePanel.add(riderRadio);
+        gbc.gridy = 6;
+        gbc.insets = new Insets(5, 10, 5, 10);
+        mainPanel.add(userTypePanel, gbc);
         
         // Sign up button
         gbc.gridy = 7;
-        gbc.insets = new Insets(20, 10, 5, 10);
+        gbc.insets = new Insets(10, 10, 0, 10);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
         mainPanel.add(signUpButton, gbc);
         
-        // Login link
+        // Login panel with text and link
         gbc.gridy = 8;
-        gbc.insets = new Insets(5, 10, 10, 10);
-        mainPanel.add(loginLink, gbc);
+        gbc.insets = new Insets(-5, 10, 15, 10);
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.anchor = GridBagConstraints.CENTER;
+        mainPanel.add(loginPanel, gbc);
         
         // Add main panel to frame
         add(mainPanel, BorderLayout.CENTER);
-        
-        // Add action listeners
-        loginLink.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                new RegisterView().setVisible(true);
-                dispose();
-            }
-        });
     }
     
     private void setupCustomScrollBars() {
@@ -292,6 +360,10 @@ public class SignupView extends javax.swing.JFrame {
             setBorder(BorderFactory.createEmptyBorder(5, 15, 5, 15));
             setPreferredSize(new Dimension(200, 35));
             setBackground(new Color(240, 240, 240));
+            
+            // Enable text editing
+            setEditable(true);
+            setEnabled(true);
         }
         
         public void setPlaceholder(String placeholder) {
@@ -372,5 +444,51 @@ public class SignupView extends javax.swing.JFrame {
             g2.fillRoundRect(0, 0, getWidth(), getHeight(), radius, radius);
             g2.dispose();
         }
+    }
+    
+    private void animatePanel() {
+        // Store original size
+        final Dimension originalSize = mainPanel.getPreferredSize();
+        final int targetWidth = originalSize.width + 100;
+        final int targetHeight = originalSize.height + 100;
+        
+        // Create and start animation timer
+        Timer timer = new Timer(16, null);  // ~60 FPS
+        final int animationDuration = 300;  // 300ms duration
+        final long startTime = System.currentTimeMillis();
+        
+        timer.addActionListener(e -> {
+            long elapsed = System.currentTimeMillis() - startTime;
+            float progress = Math.min(1f, (float)elapsed / animationDuration);
+            
+            // Smooth easing function
+            float easedProgress = (float)(1 - Math.pow(1 - progress, 3));
+            
+            // Calculate current size
+            int currentWidth = originalSize.width + (int)(easedProgress * (targetWidth - originalSize.width));
+            int currentHeight = originalSize.height + (int)(easedProgress * (targetHeight - originalSize.height));
+            
+            // Update panel size
+            mainPanel.setPreferredSize(new Dimension(currentWidth, currentHeight));
+            mainPanel.setSize(new Dimension(currentWidth, currentHeight));
+            
+            // Update frame size to accommodate the panel
+            int frameWidth = currentWidth + 50;  // Add padding
+            int frameHeight = currentHeight + 50;
+            setSize(frameWidth, frameHeight);
+            setLocationRelativeTo(null);  // Keep centered
+            
+            mainPanel.revalidate();
+            mainPanel.repaint();
+            revalidate();
+            repaint();
+            
+            // Stop timer when animation is complete
+            if (progress >= 1f) {
+                timer.stop();
+            }
+        });
+        
+        timer.start();
     }
 } 

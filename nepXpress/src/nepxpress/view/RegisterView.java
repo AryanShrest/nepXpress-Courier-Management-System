@@ -1,7 +1,3 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JFrame.java to edit this template
- */
 package nepxpress.view;
 
 import java.awt.BorderLayout;
@@ -21,9 +17,12 @@ import javax.swing.BoxLayout;
 import javax.swing.Box;
 import java.awt.Font;
 import javax.swing.border.Border;
-import javax.swing.border.BorderFactory;
+import javax.swing.BorderFactory;
 import java.awt.Cursor;
 import javax.swing.JPasswordField;
+import javax.swing.JOptionPane;
+import javax.mail.MessagingException;
+import nepxpress.util.EmailUtil;
 
 /**
  *
@@ -243,9 +242,8 @@ public class RegisterView extends javax.swing.JFrame {
                 jToggleButton1.setBackground(new java.awt.Color(0, 0, 0));
                 jToggleButton2.setSelected(true);
                 jToggleButton1.setSelected(false);
-                // Open signup view and close current window
-                new SignupView().setVisible(true);
-                dispose();
+                // Switch to signup panel in the same window
+                switchToSignup();
             }
         });
 
@@ -369,6 +367,7 @@ public class RegisterView extends javax.swing.JFrame {
     }
 
     private void switchToForgotPassword() {
+        System.out.println("Switching to forgot password view...");
         // Store the current size of white panel
         Dimension whiteBoxSize = jPanel2.getSize();
         
@@ -448,6 +447,47 @@ public class RegisterView extends javax.swing.JFrame {
             .addContainerGap(30, Short.MAX_VALUE)
         );
 
+        // Add action listener to reset button
+        resetButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                System.out.println("Reset button clicked!");
+                String email = emailField.getText().trim();
+                if (email.isEmpty()) {
+                    JOptionPane.showMessageDialog(RegisterView.this,
+                        "Please enter your email address.",
+                        "Error",
+                        JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+                
+                try {
+                    System.out.println("Attempting to send verification code to: " + email);
+                    String verificationCode = EmailUtil.sendVerificationCode(email);
+                    System.out.println("Verification code sent successfully!");
+                    // Store verification code and email for later verification
+                    switchToVerificationView(email, verificationCode);
+                } catch (MessagingException e) {
+                    e.printStackTrace(); // This will print the full error in console
+                    String errorMessage = e.getMessage();
+                    if (errorMessage == null) {
+                        errorMessage = "Unknown error occurred";
+                    }
+                    System.out.println("Email error: " + errorMessage);
+                    JOptionPane.showMessageDialog(RegisterView.this,
+                        "Failed to send verification code.\nError: " + errorMessage,
+                        "Error",
+                        JOptionPane.ERROR_MESSAGE);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    System.out.println("Unexpected error: " + e.getMessage());
+                    JOptionPane.showMessageDialog(RegisterView.this,
+                        "An unexpected error occurred: " + e.getMessage(),
+                        "Error",
+                        JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        });
+
         // Remove all components from white panel
         jPanel2.removeAll();
         
@@ -464,20 +504,327 @@ public class RegisterView extends javax.swing.JFrame {
         jPanel2.repaint();
     }
 
-    private void switchToLogin() {
-        // Store the current size
+    public void switchToLogin() {
+        // Set toggle button states
+        jToggleButton1.setBackground(new java.awt.Color(51, 122, 183));
+        jToggleButton2.setBackground(new java.awt.Color(0, 0, 0));
+        jToggleButton1.setSelected(true);
+        jToggleButton2.setSelected(false);
+        
+        // Remove all components
+        jPanel2.removeAll();
+        
+        // Restore original login components
+        jPanel2.setLayout(originalLayout);
+        
+        // Add toggle buttons
+        jPanel2.add(jToggleButton1);
+        jPanel2.add(jToggleButton2);
+        
+        // Add other login components
+        jPanel2.add(jLabel1);  // Username label
+        jPanel2.add(jPasswordField1);  // Username field
+        jPanel2.add(jLabel2);  // Password label
+        jPanel2.add(jPasswordField2);  // Password field
+        jPanel2.add(jLabel3);  // Forgot password link
+        jPanel2.add(jButton1);  // Login button
+        
+        // Update the layout
+        javax.swing.GroupLayout jPanel2Layout = (javax.swing.GroupLayout) jPanel2.getLayout();
+        jPanel2Layout.setHorizontalGroup(
+            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(javax.swing.GroupLayout.Alignment.CENTER, jPanel2Layout.createSequentialGroup()
+                .addContainerGap(40, Short.MAX_VALUE)
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jLabel1)
+                    .addComponent(jPasswordField1, javax.swing.GroupLayout.PREFERRED_SIZE, 293, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabel2)
+                    .addComponent(jPasswordField2, javax.swing.GroupLayout.PREFERRED_SIZE, 293, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabel3)
+                    .addComponent(jButton1, javax.swing.GroupLayout.PREFERRED_SIZE, 293, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap(40, Short.MAX_VALUE))
+            .addGroup(javax.swing.GroupLayout.Alignment.CENTER, jPanel2Layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jToggleButton1, javax.swing.GroupLayout.PREFERRED_SIZE, 80, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(0, 0, 0)
+                .addComponent(jToggleButton2, javax.swing.GroupLayout.PREFERRED_SIZE, 80, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap())
+        );
+        
+        jPanel2Layout.setVerticalGroup(
+            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel2Layout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jToggleButton1, javax.swing.GroupLayout.PREFERRED_SIZE, 25, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jToggleButton2, javax.swing.GroupLayout.PREFERRED_SIZE, 25, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(35, 35, 35)
+                .addComponent(jLabel1)
+                .addGap(10, 10, 10)
+                .addComponent(jPasswordField1, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(15, 15, 15)
+                .addComponent(jLabel2)
+                .addGap(10, 10, 10)
+                .addComponent(jPasswordField2, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(10, 10, 10)
+                .addComponent(jLabel3)
+                .addGap(25, 25, 25)
+                .addComponent(jButton1, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(40, Short.MAX_VALUE))
+        );
+        
+        // Refresh the panel
+        jPanel2.revalidate();
+        jPanel2.repaint();
+    }
+
+    private void switchToVerificationView(String email, String verificationCode) {
+        System.out.println("Switching to verification view...");
+        // Store the current size of white panel
         Dimension whiteBoxSize = jPanel2.getSize();
+        
+        // Create verification panel
+        JPanel verificationPanel = new RoundedPanel(40);
+        verificationPanel.setBackground(Color.WHITE);
+        verificationPanel.setLayout(new GroupLayout(verificationPanel));
+        
+        // Title
+        JLabel titleLabel = new JLabel("Verify Your Email");
+        titleLabel.setFont(new Font("Segoe UI", 0, 24));
+        
+        // Code field
+        PlaceholderTextField codeField = new PlaceholderTextField("Enter Verification Code", 25);
+        codeField.setFont(new Font("Segoe UI", 0, 14));
+        codeField.setBorder(BorderFactory.createEmptyBorder(5, 15, 5, 15));
+        codeField.setBackground(new Color(240, 240, 240));
+        
+        // Message
+        JLabel messageLabel = new JLabel("Please enter the verification code sent to your email:");
+        messageLabel.setFont(new Font("Segoe UI", 0, 12));
+        messageLabel.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        
+        JLabel emailLabel = new JLabel(email);
+        emailLabel.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        emailLabel.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        
+        // Verify button
+        JButton verifyButton = new JButton("Verify");
+        verifyButton.setBackground(new Color(206, 255, 137));
+        verifyButton.setFont(new Font("Segoe UI", 0, 14));
+        verifyButton.setForeground(Color.BLACK);
+        verifyButton.setBorderPainted(false);
+        verifyButton.setFocusPainted(false);
+        
+        // Add action listener to verify button
+        verifyButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                String enteredCode = codeField.getText().trim();
+                if (enteredCode.equals(verificationCode)) {
+                    // Code matches - proceed to reset password
+                    switchToResetPasswordView(email);
+                } else {
+                    JOptionPane.showMessageDialog(RegisterView.this,
+                        "Invalid verification code. Please try again.",
+                        "Error",
+                        JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        });
+        
+        // Back button
+        JLabel backButton = new JLabel("<html><u>Back</u></html>");
+        backButton.setFont(new Font("Segoe UI", 0, 12));
+        backButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        backButton.setForeground(new Color(76, 115, 13));
+        backButton.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                switchToForgotPassword();
+            }
+        });
+        
+        // Layout
+        GroupLayout layout = (GroupLayout) verificationPanel.getLayout();
+        layout.setHorizontalGroup(
+            layout.createParallelGroup(GroupLayout.Alignment.CENTER)
+            .addGroup(layout.createSequentialGroup()
+                .addContainerGap(40, Short.MAX_VALUE)
+                .addGroup(layout.createParallelGroup(GroupLayout.Alignment.CENTER)
+                    .addComponent(titleLabel)
+                    .addComponent(messageLabel)
+                    .addComponent(emailLabel)
+                    .addComponent(codeField, GroupLayout.PREFERRED_SIZE, 293, GroupLayout.PREFERRED_SIZE)
+                    .addComponent(verifyButton, GroupLayout.PREFERRED_SIZE, 293, GroupLayout.PREFERRED_SIZE)
+                    .addComponent(backButton))
+                .addContainerGap(40, Short.MAX_VALUE))
+        );
+        
+        layout.setVerticalGroup(
+            layout.createSequentialGroup()
+            .addGap(30)
+            .addComponent(titleLabel)
+            .addGap(30)
+            .addComponent(messageLabel)
+            .addGap(5)
+            .addComponent(emailLabel)
+            .addGap(20)
+            .addComponent(codeField, GroupLayout.PREFERRED_SIZE, 28, GroupLayout.PREFERRED_SIZE)
+            .addGap(30)
+            .addComponent(verifyButton, GroupLayout.PREFERRED_SIZE, 28, GroupLayout.PREFERRED_SIZE)
+            .addGap(20)
+            .addComponent(backButton)
+            .addContainerGap(30, Short.MAX_VALUE)
+        );
         
         // Remove all components from white panel
         jPanel2.removeAll();
         
-        // Restore original layout
-        jPanel2.setLayout(originalLayout);
+        // Add verification panel
+        jPanel2.setLayout(new BorderLayout());
+        jPanel2.add(verificationPanel, BorderLayout.CENTER);
         
-        // Restore all original components
-        for (Component comp : loginComponents) {
-            jPanel2.add(comp);
-        }
+        // Ensure the white panel maintains its size
+        jPanel2.setPreferredSize(whiteBoxSize);
+        jPanel2.setSize(whiteBoxSize);
+        
+        // Refresh the panel
+        jPanel2.revalidate();
+        jPanel2.repaint();
+    }
+
+    private void switchToResetPasswordView(String email) {
+        System.out.println("Switching to reset password view...");
+        // Store the current size of white panel
+        Dimension whiteBoxSize = jPanel2.getSize();
+        
+        // Create reset password panel
+        JPanel resetPanel = new RoundedPanel(40);
+        resetPanel.setBackground(Color.WHITE);
+        resetPanel.setLayout(new GroupLayout(resetPanel));
+        
+        // Title
+        JLabel titleLabel = new JLabel("Reset Password");
+        titleLabel.setFont(new Font("Segoe UI", 0, 24));
+        
+        // Password fields
+        RoundedPasswordField newPasswordField = new RoundedPasswordField(25);
+        newPasswordField.setBorder(BorderFactory.createEmptyBorder(5, 15, 5, 15));
+        newPasswordField.setBackground(new Color(240, 240, 240));
+        
+        RoundedPasswordField confirmPasswordField = new RoundedPasswordField(25);
+        confirmPasswordField.setBorder(BorderFactory.createEmptyBorder(5, 15, 5, 15));
+        confirmPasswordField.setBackground(new Color(240, 240, 240));
+        
+        // Labels
+        JLabel newPasswordLabel = new JLabel("New Password:");
+        newPasswordLabel.setFont(new Font("Segoe UI", 0, 14));
+        
+        JLabel confirmPasswordLabel = new JLabel("Confirm Password:");
+        confirmPasswordLabel.setFont(new Font("Segoe UI", 0, 14));
+        
+        // Submit button
+        JButton submitButton = new JButton("Change Password");
+        submitButton.setBackground(new Color(206, 255, 137));
+        submitButton.setFont(new Font("Segoe UI", 0, 14));
+        submitButton.setForeground(Color.BLACK);
+        submitButton.setBorderPainted(false);
+        submitButton.setFocusPainted(false);
+        
+        // Add action listener to submit button
+        submitButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                String newPassword = new String(newPasswordField.getPassword());
+                String confirmPassword = new String(confirmPasswordField.getPassword());
+                
+                if (newPassword.isEmpty() || confirmPassword.isEmpty()) {
+                    JOptionPane.showMessageDialog(RegisterView.this,
+                        "Please fill in all fields.",
+                        "Error",
+                        JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+                
+                if (!newPassword.equals(confirmPassword)) {
+                    JOptionPane.showMessageDialog(RegisterView.this,
+                        "Passwords do not match.",
+                        "Error",
+                        JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+                
+                // TODO: Update password in database
+                // For now, just show success message and return to login
+                JOptionPane.showMessageDialog(RegisterView.this,
+                    "Password has been reset successfully!",
+                    "Success",
+                    JOptionPane.INFORMATION_MESSAGE);
+                switchToLogin();
+            }
+        });
+        
+        // Layout
+        GroupLayout layout = (GroupLayout) resetPanel.getLayout();
+        layout.setHorizontalGroup(
+            layout.createParallelGroup(GroupLayout.Alignment.CENTER)
+            .addGroup(layout.createSequentialGroup()
+                .addContainerGap(40, Short.MAX_VALUE)
+                .addGroup(layout.createParallelGroup(GroupLayout.Alignment.LEADING)
+                    .addComponent(titleLabel, GroupLayout.Alignment.CENTER)
+                    .addComponent(newPasswordLabel)
+                    .addComponent(newPasswordField, GroupLayout.PREFERRED_SIZE, 293, GroupLayout.PREFERRED_SIZE)
+                    .addComponent(confirmPasswordLabel)
+                    .addComponent(confirmPasswordField, GroupLayout.PREFERRED_SIZE, 293, GroupLayout.PREFERRED_SIZE)
+                    .addComponent(submitButton, GroupLayout.PREFERRED_SIZE, 293, GroupLayout.PREFERRED_SIZE))
+                .addContainerGap(40, Short.MAX_VALUE))
+        );
+        
+        layout.setVerticalGroup(
+            layout.createSequentialGroup()
+            .addGap(30)
+            .addComponent(titleLabel)
+            .addGap(30)
+            .addComponent(newPasswordLabel)
+            .addGap(5)
+            .addComponent(newPasswordField, GroupLayout.PREFERRED_SIZE, 28, GroupLayout.PREFERRED_SIZE)
+            .addGap(20)
+            .addComponent(confirmPasswordLabel)
+            .addGap(5)
+            .addComponent(confirmPasswordField, GroupLayout.PREFERRED_SIZE, 28, GroupLayout.PREFERRED_SIZE)
+            .addGap(30)
+            .addComponent(submitButton, GroupLayout.PREFERRED_SIZE, 28, GroupLayout.PREFERRED_SIZE)
+            .addContainerGap(30, Short.MAX_VALUE)
+        );
+        
+        // Remove all components from white panel
+        jPanel2.removeAll();
+        
+        // Add reset password panel
+        jPanel2.setLayout(new BorderLayout());
+        jPanel2.add(resetPanel, BorderLayout.CENTER);
+        
+        // Ensure the white panel maintains its size
+        jPanel2.setPreferredSize(whiteBoxSize);
+        jPanel2.setSize(whiteBoxSize);
+        
+        // Refresh the panel
+        jPanel2.revalidate();
+        jPanel2.repaint();
+    }
+
+    // Add this new method to switch to signup panel
+    private void switchToSignup() {
+        // Store the current size of white panel
+        Dimension whiteBoxSize = jPanel2.getSize();
+        
+        // Create signup panel
+        SignupView signupView = new SignupView();
+        JPanel signupContent = signupView.getMainPanel();
+        
+        // Remove all components from white panel
+        jPanel2.removeAll();
+        
+        // Add signup panel
+        jPanel2.setLayout(new BorderLayout());
+        jPanel2.add(signupContent, BorderLayout.CENTER);
         
         // Ensure the white panel maintains its size
         jPanel2.setPreferredSize(whiteBoxSize);
