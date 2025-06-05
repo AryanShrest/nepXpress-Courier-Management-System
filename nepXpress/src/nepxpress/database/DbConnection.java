@@ -9,5 +9,5 @@ package nepxpress.database;
  * @author Asus
  */
 public class DbConnection {
-    
+
 }

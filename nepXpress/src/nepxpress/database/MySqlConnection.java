@@ -4,10 +4,19 @@
  */
 package nepxpress.database;
 
+import java.sql.Connection;
+
 /**
  *
  * @author Asus
  */
 public class MySqlConnection {
     
+    public void useConnection() {
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            // Use the connection
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 }

@@ -23,6 +23,8 @@ import javax.swing.JPasswordField;
 import javax.swing.JOptionPane;
 import javax.mail.MessagingException;
 import nepxpress.util.EmailUtil;
+import nepxpress.database.UserDAO;
+import nepxpress.database.UserSessionDAO;
 
 /**
  *
@@ -185,7 +187,7 @@ public class RegisterView extends javax.swing.JFrame {
         
         // Setup components
         jLabel1.setFont(new java.awt.Font("Segoe UI", 0, 18));
-        jLabel1.setText("Username :");
+        jLabel1.setText("Phone Number :");
 
         jLabel2.setFont(new java.awt.Font("Segoe UI", 0, 18));
         jLabel2.setText("Password :");
@@ -193,6 +195,11 @@ public class RegisterView extends javax.swing.JFrame {
         jButton1.setBackground(new java.awt.Color(157, 205, 90));
         jButton1.setFont(new java.awt.Font("Segoe UI", 0, 14));
         jButton1.setText("Login");
+        jButton1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton1ActionPerformed(evt);
+            }
+        });
 
         // Setup toggle background panel
         toggleBgPanel.setBackground(new java.awt.Color(0, 0, 0));
@@ -363,7 +370,77 @@ public class RegisterView extends javax.swing.JFrame {
     }
 
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {
-        // TODO add your handling code here:
+        String phoneNumber = jPasswordField1.getText().trim();
+        String password = new String(jPasswordField2.getPassword()).trim();
+        
+        // Validate input
+        if (phoneNumber.isEmpty() || password.isEmpty()) {
+            JOptionPane.showMessageDialog(this,
+                "Please enter both phone number and password.",
+                "Error",
+                JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        
+        // Validate phone number format
+        if (!phoneNumber.matches("^(977)?[9][6-9]\\d{8}$")) {
+            JOptionPane.showMessageDialog(this,
+                "Invalid phone number format. Please use format: 977XXXXXXX",
+                "Error",
+                JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        
+        try {
+            // Create UserDAO instance
+            UserDAO userDAO = new UserDAO();
+            
+            // Validate login
+            if (userDAO.validateLogin(phoneNumber, password)) {
+                JOptionPane.showMessageDialog(this,
+                    "Login successful!",
+                    "Success",
+                    JOptionPane.INFORMATION_MESSAGE);
+                // TODO: Navigate to main application window
+                UserSessionDAO sessionDAO = new UserSessionDAO();
+                String sessionToken = sessionDAO.createSession(
+                    userId,                     // The logged-in user's ID
+                    request.getRemoteAddr(),    // IP address
+                    request.getHeader("User-Agent")  // Browser info
+                );
+                // Store the session token (e.g., in a cookie or local storage)
+                // You can then use this token to validate the user's session on subsequent requests
+                if (sessionDAO.validateSession(sessionToken)) {
+                    // User is logged in
+                    int userId = sessionDAO.getUserIdFromSession(sessionToken);
+                    // Proceed with authenticated request
+                    sessionDAO.invalidateSession(sessionToken);
+                    // Clear session token from cookie/storage
+                    dispose();
+                } else {
+                    // Session is invalid or expired
+                    // Redirect to login page
+                    switchToLogin();
+                }
+            } else {
+                JOptionPane.showMessageDialog(this,
+                    "Invalid phone number or password.",
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this,
+                "An error occurred during login: " + e.getMessage(),
+                "Error",
+                JOptionPane.ERROR_MESSAGE);
+        }
+    }
+    
+    private boolean mockAuthenticate(String username, String password) {
+        // TODO: Replace with actual database authentication
+        // This is just a mock implementation for testing
+        return username.equals("admin") && password.equals("admin123");
     }
 
     private void switchToForgotPassword() {
@@ -414,39 +491,6 @@ public class RegisterView extends javax.swing.JFrame {
             }
         });
 
-        // Setup GroupLayout
-        GroupLayout layout = (GroupLayout) forgotPanel.getLayout();
-        layout.setHorizontalGroup(
-            layout.createParallelGroup(GroupLayout.Alignment.CENTER)
-            .addGroup(layout.createSequentialGroup()
-                .addContainerGap(40, Short.MAX_VALUE)
-                .addGroup(layout.createParallelGroup(GroupLayout.Alignment.CENTER)
-                    .addComponent(titleLabel)
-                    .addComponent(emailField, GroupLayout.PREFERRED_SIZE, 293, GroupLayout.PREFERRED_SIZE)
-                    .addComponent(messageLabel)
-                    .addComponent(messageLabel2)
-                    .addComponent(resetButton, GroupLayout.PREFERRED_SIZE, 293, GroupLayout.PREFERRED_SIZE)
-                    .addComponent(backToLoginLabel))
-                .addContainerGap(40, Short.MAX_VALUE))
-        );
-        
-        layout.setVerticalGroup(
-            layout.createSequentialGroup()
-            .addGap(30)
-            .addComponent(titleLabel)
-            .addGap(30)
-            .addComponent(emailField, GroupLayout.PREFERRED_SIZE, 28, GroupLayout.PREFERRED_SIZE)
-            .addGap(20)
-            .addComponent(messageLabel)
-            .addGap(5)
-            .addComponent(messageLabel2)
-            .addGap(30)
-            .addComponent(resetButton, GroupLayout.PREFERRED_SIZE, 28, GroupLayout.PREFERRED_SIZE)
-            .addGap(20)
-            .addComponent(backToLoginLabel)
-            .addContainerGap(30, Short.MAX_VALUE)
-        );
-
         // Add action listener to reset button
         resetButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -487,6 +531,39 @@ public class RegisterView extends javax.swing.JFrame {
                 }
             }
         });
+
+        // Layout
+        GroupLayout layout = (GroupLayout) forgotPanel.getLayout();
+        layout.setHorizontalGroup(
+            layout.createParallelGroup(GroupLayout.Alignment.CENTER)
+            .addGroup(layout.createSequentialGroup()
+                .addContainerGap(40, Short.MAX_VALUE)
+                .addGroup(layout.createParallelGroup(GroupLayout.Alignment.CENTER)
+                    .addComponent(titleLabel)
+                    .addComponent(emailField, GroupLayout.PREFERRED_SIZE, 293, GroupLayout.PREFERRED_SIZE)
+                    .addComponent(messageLabel)
+                    .addComponent(messageLabel2)
+                    .addComponent(resetButton, GroupLayout.PREFERRED_SIZE, 293, GroupLayout.PREFERRED_SIZE)
+                    .addComponent(backToLoginLabel))
+                .addContainerGap(40, Short.MAX_VALUE))
+        );
+        
+        layout.setVerticalGroup(
+            layout.createSequentialGroup()
+            .addGap(30)
+            .addComponent(titleLabel)
+            .addGap(30)
+            .addComponent(emailField, GroupLayout.PREFERRED_SIZE, 35, GroupLayout.PREFERRED_SIZE)
+            .addGap(20)
+            .addComponent(messageLabel)
+            .addGap(5)
+            .addComponent(messageLabel2)
+            .addGap(30)
+            .addComponent(resetButton, GroupLayout.PREFERRED_SIZE, 35, GroupLayout.PREFERRED_SIZE)
+            .addGap(20)
+            .addComponent(backToLoginLabel)
+            .addContainerGap(30, Short.MAX_VALUE)
+        );
 
         // Remove all components from white panel
         jPanel2.removeAll();

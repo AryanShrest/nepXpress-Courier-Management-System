@@ -4,6 +4,7 @@ import javax.swing.*;
 import javax.swing.plaf.basic.BasicScrollBarUI;
 import java.awt.*;
 import java.awt.event.*;
+import nepxpress.database.UserDAO;
 
 public class SignupView extends javax.swing.JFrame {
     
@@ -101,11 +102,9 @@ public class SignupView extends javax.swing.JFrame {
         // Add action listener to rider radio button
         riderRadio.addActionListener(e -> {
             if (riderRadio.isSelected()) {
-                // Open rider signup view
+                // Create and show rider signup window
                 RiderSignupView riderView = new RiderSignupView();
                 riderView.setVisible(true);
-                // Close current window
-                dispose();
             }
         });
         
@@ -116,8 +115,12 @@ public class SignupView extends javax.swing.JFrame {
         signUpButton.setFocusPainted(false);
         signUpButton.setPreferredSize(new Dimension(293, 35));  // Set specific width to match other fields
         
-        // Add click listener to signup button for animation
-        signUpButton.addActionListener(e -> animatePanel());
+        // Add click listener to signup button
+        signUpButton.addActionListener(e -> {
+            if (validateSignupForm()) {
+                handleSignup();
+            }
+        });
         
         // Login text and link in one panel
         JPanel loginPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
@@ -175,7 +178,7 @@ public class SignupView extends javax.swing.JFrame {
         gbc.gridx = 0;
         gbc.gridy = 0;
         gbc.gridwidth = 2;
-        gbc.insets = new Insets(20, 10, 20, 10);
+        gbc.insets = new Insets(15, 10, 15, 10);  // Reduced from 20px to 15px top/bottom
         gbc.fill = GridBagConstraints.HORIZONTAL;
         mainPanel.add(titleLabel, gbc);
         
@@ -186,12 +189,12 @@ public class SignupView extends javax.swing.JFrame {
         namePanel.add(surnameField);
         
         gbc.gridy = 1;
-        gbc.insets = new Insets(5, 10, 5, 10);
+        gbc.insets = new Insets(3, 10, 3, 10);  // Reduced from 5px to 3px top/bottom
         mainPanel.add(namePanel, gbc);
         
         // Email field
         gbc.gridy = 2;
-        gbc.insets = new Insets(5, 10, 5, 10);
+        gbc.insets = new Insets(3, 10, 3, 10);  // Reduced from 5px to 3px top/bottom
         mainPanel.add(emailField, gbc);
         
         // Password field
@@ -222,18 +225,18 @@ public class SignupView extends javax.swing.JFrame {
         userTypePanel.add(userRadio);
         userTypePanel.add(riderRadio);
         gbc.gridy = 6;
-        gbc.insets = new Insets(5, 10, 5, 10);
+        gbc.insets = new Insets(3, 10, 3, 10);  // Reduced from 5px to 3px top/bottom
         mainPanel.add(userTypePanel, gbc);
         
         // Sign up button
         gbc.gridy = 7;
-        gbc.insets = new Insets(10, 10, 0, 10);
+        gbc.insets = new Insets(8, 10, 0, 10);  // Reduced from 10px to 8px top
         gbc.fill = GridBagConstraints.HORIZONTAL;
         mainPanel.add(signUpButton, gbc);
         
         // Login panel with text and link
         gbc.gridy = 8;
-        gbc.insets = new Insets(-5, 10, 15, 10);
+        gbc.insets = new Insets(-8, 10, 12, 10);  // Reduced from -5px to -8px top and 15px to 12px bottom
         gbc.fill = GridBagConstraints.NONE;
         gbc.anchor = GridBagConstraints.CENTER;
         mainPanel.add(loginPanel, gbc);
@@ -446,49 +449,145 @@ public class SignupView extends javax.swing.JFrame {
         }
     }
     
-    private void animatePanel() {
-        // Store original size
-        final Dimension originalSize = mainPanel.getPreferredSize();
-        final int targetWidth = originalSize.width + 100;
-        final int targetHeight = originalSize.height + 100;
+    private boolean validateSignupForm() {
+        StringBuilder errors = new StringBuilder();
+        boolean isValid = true;
         
-        // Create and start animation timer
-        Timer timer = new Timer(16, null);  // ~60 FPS
-        final int animationDuration = 300;  // 300ms duration
-        final long startTime = System.currentTimeMillis();
+        // Validate first name
+        if (firstNameField.getText().trim().isEmpty()) {
+            errors.append("- First name is required\n");
+            isValid = false;
+        }
         
-        timer.addActionListener(e -> {
-            long elapsed = System.currentTimeMillis() - startTime;
-            float progress = Math.min(1f, (float)elapsed / animationDuration);
-            
-            // Smooth easing function
-            float easedProgress = (float)(1 - Math.pow(1 - progress, 3));
-            
-            // Calculate current size
-            int currentWidth = originalSize.width + (int)(easedProgress * (targetWidth - originalSize.width));
-            int currentHeight = originalSize.height + (int)(easedProgress * (targetHeight - originalSize.height));
-            
-            // Update panel size
-            mainPanel.setPreferredSize(new Dimension(currentWidth, currentHeight));
-            mainPanel.setSize(new Dimension(currentWidth, currentHeight));
-            
-            // Update frame size to accommodate the panel
-            int frameWidth = currentWidth + 50;  // Add padding
-            int frameHeight = currentHeight + 50;
-            setSize(frameWidth, frameHeight);
-            setLocationRelativeTo(null);  // Keep centered
-            
-            mainPanel.revalidate();
-            mainPanel.repaint();
-            revalidate();
-            repaint();
-            
-            // Stop timer when animation is complete
-            if (progress >= 1f) {
-                timer.stop();
+        // Validate surname
+        if (surnameField.getText().trim().isEmpty()) {
+            errors.append("- Surname is required\n");
+            isValid = false;
+        }
+        
+        // Validate email/mobile
+        String emailOrMobile = emailField.getText().trim();
+        if (emailOrMobile.isEmpty()) {
+            errors.append("- Email or mobile number is required\n");
+            isValid = false;
+        } else if (emailOrMobile.contains("@")) {
+            // Validate email format
+            if (!emailOrMobile.matches("^[A-Za-z0-9+_.-]+@(.+)$")) {
+                errors.append("- Invalid email format\n");
+                isValid = false;
             }
-        });
+        } else {
+            // Validate mobile number format (assuming Nepal number format)
+            if (!emailOrMobile.matches("^(977)?[9][6-9]\\d{8}$")) {
+                errors.append("- Invalid mobile number format\n");
+                isValid = false;
+            }
+        }
         
-        timer.start();
+        // Validate password
+        String password = new String(passwordField.getPassword());
+        if (password.isEmpty()) {
+            errors.append("- Password is required\n");
+            isValid = false;
+        } else if (password.length() < 8) {
+            errors.append("- Password must be at least 8 characters long\n");
+            isValid = false;
+        }
+        
+        // Validate date of birth
+        if (dayBox.getSelectedIndex() == -1 || monthBox.getSelectedIndex() == -1 || yearBox.getSelectedIndex() == -1) {
+            errors.append("- Please select a valid date of birth\n");
+            isValid = false;
+        }
+        
+        // Validate gender selection
+        if (!femaleRadio.isSelected() && !maleRadio.isSelected() && !customRadio.isSelected()) {
+            errors.append("- Please select your gender\n");
+            isValid = false;
+        }
+        
+        // Validate user type selection
+        if (!userRadio.isSelected() && !riderRadio.isSelected()) {
+            errors.append("- Please select an account type\n");
+            isValid = false;
+        }
+        
+        if (!isValid) {
+            JOptionPane.showMessageDialog(this,
+                "Please correct the following errors:\n" + errors.toString(),
+                "Validation Error",
+                JOptionPane.ERROR_MESSAGE);
+        }
+        
+        return isValid;
+    }
+    
+    private void handleSignup() {
+        try {
+            // Gather user information
+            String firstName = firstNameField.getText().trim();
+            String surname = surnameField.getText().trim();
+            String emailOrMobile = emailField.getText().trim();
+            String password = new String(passwordField.getPassword());
+            
+            // Build date of birth
+            String dob = String.format("%s-%s-%s",
+                yearBox.getSelectedItem(),
+                String.format("%02d", monthBox.getSelectedIndex() + 1),
+                String.format("%02d", Integer.parseInt(dayBox.getSelectedItem().toString()))
+            );
+            
+            // Get gender
+            String gender = femaleRadio.isSelected() ? "Female" :
+                          maleRadio.isSelected() ? "Male" : "Custom";
+            
+            // Get account type
+            String accountType = userRadio.isSelected() ? "User" : "Rider";
+            
+            // Create UserDAO instance
+            UserDAO userDAO = new UserDAO();
+            
+            // Check if email/mobile already exists
+            if (userDAO.emailOrMobileExists(emailOrMobile)) {
+                JOptionPane.showMessageDialog(this,
+                    "An account with this email/mobile already exists.",
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+            
+            // Create user in database
+            boolean success = userDAO.createUser(firstName, surname, emailOrMobile, 
+                                               password, dob, gender, accountType);
+            
+            if (success) {
+                JOptionPane.showMessageDialog(this,
+                    "Account created successfully!\n\n" +
+                    "Name: " + firstName + " " + surname + "\n" +
+                    "Email/Mobile: " + emailOrMobile + "\n" +
+                    "Date of Birth: " + dob + "\n" +
+                    "Gender: " + gender + "\n" +
+                    "Account Type: " + accountType,
+                    "Success",
+                    JOptionPane.INFORMATION_MESSAGE);
+                
+                // If rider account, keep the window open as RiderSignupView will handle the rest
+                if (accountType.equals("User")) {
+                    dispose();
+                }
+            } else {
+                JOptionPane.showMessageDialog(this,
+                    "Failed to create account. Please try again.",
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE);
+            }
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this,
+                "An error occurred during signup: " + e.getMessage(),
+                "Error",
+                JOptionPane.ERROR_MESSAGE);
+        }
     }
 } 
