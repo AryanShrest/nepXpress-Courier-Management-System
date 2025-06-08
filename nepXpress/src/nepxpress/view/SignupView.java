@@ -5,6 +5,7 @@ import javax.swing.plaf.basic.BasicScrollBarUI;
 import java.awt.*;
 import java.awt.event.*;
 import nepxpress.database.UserDAO;
+import nepxpress.database.UserSessionDAO;
 
 public class SignupView extends javax.swing.JFrame {
     
@@ -38,7 +39,7 @@ public class SignupView extends javax.swing.JFrame {
         
         mainPanel = new RoundedPanel(40);
         mainPanel.setBackground(Color.WHITE);
-        mainPanel.setPreferredSize(new Dimension(600, 500));  // Set initial size
+        mainPanel.setPreferredSize(new Dimension(370, 300));  // Reduced size to match login
         
         // Title
         titleLabel = new JLabel("Create a new account");
