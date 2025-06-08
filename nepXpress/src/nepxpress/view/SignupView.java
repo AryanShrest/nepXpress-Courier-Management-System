@@ -568,12 +568,23 @@ public class SignupView extends javax.swing.JFrame {
                     "Email/Mobile: " + emailOrMobile + "\n" +
                     "Date of Birth: " + dob + "\n" +
                     "Gender: " + gender + "\n" +
-                    "Account Type: " + accountType,
+                    "Account Type: " + accountType + "\n\n" +
+                    "Please login with your credentials.",
                     "Success",
                     JOptionPane.INFORMATION_MESSAGE);
                 
                 // If rider account, keep the window open as RiderSignupView will handle the rest
                 if (accountType.equals("User")) {
+                    // Return to login screen
+                    Container parent = mainPanel;
+                    while (parent != null) {
+                        if (parent.getParent() instanceof RegisterView) {
+                            RegisterView registerView = (RegisterView) parent.getParent();
+                            registerView.switchToLogin();
+                            return;
+                        }
+                        parent = parent.getParent();
+                    }
                     dispose();
                 }
             } else {

@@ -21,10 +21,11 @@ import javax.swing.BorderFactory;
 import java.awt.Cursor;
 import javax.swing.JPasswordField;
 import javax.swing.JOptionPane;
-import javax.mail.MessagingException;
-import nepxpress.util.EmailUtil;
 import nepxpress.database.UserDAO;
 import nepxpress.database.UserSessionDAO;
+import javax.swing.SwingUtilities;
+import javax.mail.MessagingException;
+import nepxpress.util.EmailUtil;
 
 /**
  *
@@ -447,9 +448,10 @@ public class RegisterView extends javax.swing.JFrame {
                 // You can then use this token to validate the user's session on subsequent requests
                 if (sessionDAO.validateSession(sessionToken)) {
                     // User is logged in
-                    // Proceed with authenticated request
-                    sessionDAO.invalidateSession(sessionToken);
-                    // Clear session token from cookie/storage
+                    // Open the user dashboard
+                    SwingUtilities.invokeLater(() -> {
+                        new DashboardFrame().setVisible(true);
+                    });
                     dispose();
                 } else {
                     // Session is invalid or expired
@@ -542,17 +544,12 @@ public class RegisterView extends javax.swing.JFrame {
                     System.out.println("Attempting to send verification code to: " + email);
                     String verificationCode = EmailUtil.sendVerificationCode(email);
                     System.out.println("Verification code sent successfully!");
-                    // Store verification code and email for later verification
                     switchToVerificationView(email, verificationCode);
                 } catch (MessagingException e) {
-                    e.printStackTrace(); // This will print the full error in console
-                    String errorMessage = e.getMessage();
-                    if (errorMessage == null) {
-                        errorMessage = "Unknown error occurred";
-                    }
-                    System.out.println("Email error: " + errorMessage);
+                    e.printStackTrace();
+                    System.out.println("Failed to send email: " + e.getMessage());
                     JOptionPane.showMessageDialog(RegisterView.this,
-                        "Failed to send verification code.\nError: " + errorMessage,
+                        "Failed to send verification code: " + e.getMessage(),
                         "Error",
                         JOptionPane.ERROR_MESSAGE);
                 } catch (Exception e) {

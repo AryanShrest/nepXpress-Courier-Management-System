@@ -34,6 +34,9 @@ public class RiderSignupView extends JFrame {
     private JTextField fitnessNumberField;
     private JButton submitButton;
 
+    // Add file chooser functionality
+    private JLabel imagePreviewLabel;
+
     public RiderSignupView() {
         // Set up window properties
         setTitle("Rider Registration");
@@ -64,6 +67,14 @@ public class RiderSignupView extends JFrame {
         
         // Add validation listeners
         addValidationListeners();
+
+        // Maximize window when shown
+        addWindowListener(new java.awt.event.WindowAdapter() {
+            @Override
+            public void windowOpened(java.awt.event.WindowEvent e) {
+                setExtendedState(JFrame.MAXIMIZED_BOTH);
+            }
+        });
     }
     
     private void createPersonalInfoPanel() {
@@ -448,6 +459,16 @@ public class RiderSignupView extends JFrame {
 
     // Add file chooser functionality
     private void addFileChooser() {
+        // Add image preview label next to fileNameLabel
+        if (imagePreviewLabel == null) {
+            imagePreviewLabel = new JLabel();
+            imagePreviewLabel.setPreferredSize(new Dimension(60, 60));
+            imagePreviewLabel.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
+            imagePreviewLabel.setOpaque(true);
+            imagePreviewLabel.setBackground(Color.WHITE);
+            // Add to uploadPanel after fileNameLabel
+            fileNameLabel.getParent().add(imagePreviewLabel);
+        }
         chooseFileButton.addActionListener(e -> {
             JFileChooser fileChooser = new JFileChooser();
             // Set file filter for images
@@ -462,54 +483,22 @@ public class RiderSignupView extends JFrame {
                     return "Image files (*.jpg, *.jpeg, *.png, *.gif)";
                 }
             });
-            
             int result = fileChooser.showOpenDialog(this);
             if (result == JFileChooser.APPROVE_OPTION) {
                 File selectedFile = fileChooser.getSelectedFile();
-                
-                // Validate file size (max 1MB)
-                if (selectedFile.length() > 1024 * 1024) {
-                    JOptionPane.showMessageDialog(this,
-                        "File size must not exceed 1MB.",
-                        "Error",
-                        JOptionPane.ERROR_MESSAGE);
-                    return;
-                }
-                
-                // Validate image dimensions and format
+                fileNameLabel.setText(selectedFile.getName());
                 try {
-                    javax.imageio.stream.ImageInputStream iis = javax.imageio.ImageIO.createImageInputStream(selectedFile);
-                    javax.imageio.ImageReader reader = javax.imageio.ImageIO.getImageReaders(iis).next();
-                    reader.setInput(iis);
-                    
-                    // Check image format
-                    String format = reader.getFormatName().toLowerCase();
-                    if (!format.equals("jpeg") && !format.equals("jpg") && 
-                        !format.equals("png") && !format.equals("gif")) {
-                        JOptionPane.showMessageDialog(this,
-                            "Invalid image format. Please use JPG, PNG or GIF.",
-                            "Error",
-                            JOptionPane.ERROR_MESSAGE);
-                        return;
+                    Image img = ImageIO.read(selectedFile);
+                    if (img != null) {
+                        Image scaledImg = img.getScaledInstance(60, 60, Image.SCALE_SMOOTH);
+                        imagePreviewLabel.setIcon(new ImageIcon(scaledImg));
+                    } else {
+                        imagePreviewLabel.setIcon(null);
                     }
-                    
-                    // Check image dimensions
-                    int width = reader.getWidth(0);
-                    int height = reader.getHeight(0);
-                    if (width < 100 || height < 100) {
-                        JOptionPane.showMessageDialog(this,
-                            "Image dimensions too small. Minimum size is 100x100 pixels.",
-                            "Error",
-                            JOptionPane.ERROR_MESSAGE);
-                        return;
-                    }
-                    
-                    // If all validations pass, update the label
-                    fileNameLabel.setText(selectedFile.getName());
-                    
                 } catch (Exception ex) {
+                    imagePreviewLabel.setIcon(null);
                     JOptionPane.showMessageDialog(this,
-                        "Error validating image file: " + ex.getMessage(),
+                        "Could not load image: " + ex.getMessage(),
                         "Error",
                         JOptionPane.ERROR_MESSAGE);
                 }

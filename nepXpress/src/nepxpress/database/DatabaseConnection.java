@@ -46,38 +46,7 @@ public class DatabaseConnection {
             stmt.execute(DatabaseConfig.CREATE_DATABASE);
             stmt.execute("USE nepxpress");
             
-            // First, check existing tables
-            List<String> existingTables = new ArrayList<>();
-            try (ResultSet rs = stmt.executeQuery("SHOW TABLES")) {
-                while (rs.next()) {
-                    String tableName = rs.getString(1);
-                    existingTables.add(tableName);
-                }
-            }
-            
-            // Drop existing tables if they exist (in reverse order of dependencies)
-            stmt.execute("SET FOREIGN_KEY_CHECKS = 0"); // Temporarily disable foreign key checks
-            
-            // Drop tables in reverse dependency order
-            String[] tablesToDrop = {
-                "user_sessions",
-                "password_resets",
-                "riders",
-                "users",
-                "deliveries",  // Drop old tables too
-                "orders"
-            };
-            
-            for (String table : tablesToDrop) {
-                try {
-                    stmt.execute("DROP TABLE IF EXISTS " + table);
-                } catch (SQLException e) {
-                }
-            }
-            
-            stmt.execute("SET FOREIGN_KEY_CHECKS = 1"); // Re-enable foreign key checks
-            
-            // Create tables in order of dependencies
+            // Create tables in order of dependencies (only if they don't exist)
             
             // 1. Create users table (no dependencies)
             stmt.execute(DatabaseConfig.CREATE_USERS_TABLE);
