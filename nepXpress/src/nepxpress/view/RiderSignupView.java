@@ -5,7 +5,7 @@ import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.io.File;
 import javax.imageio.ImageIO;
-import javax.imageio.ImageInputStream;
+import javax.imageio.stream.ImageInputStream;
 import nepxpress.database.RiderDAO;
 import nepxpress.database.UserDAO;
 
@@ -478,7 +478,7 @@ public class RiderSignupView extends JFrame {
                 
                 // Validate image dimensions and format
                 try {
-                    javax.imageio.ImageInputStream iis = javax.imageio.ImageIO.createImageInputStream(selectedFile);
+                    javax.imageio.stream.ImageInputStream iis = javax.imageio.ImageIO.createImageInputStream(selectedFile);
                     javax.imageio.ImageReader reader = javax.imageio.ImageIO.getImageReaders(iis).next();
                     reader.setInput(iis);
                     
@@ -530,7 +530,11 @@ public class RiderSignupView extends JFrame {
         // Add validation to Submit button
         submitButton.addActionListener(e -> {
             if (validateVehicleInfo()) {
-                handleSubmit();
+                JOptionPane.showMessageDialog(this,
+                    "Account requested, you will be soon notified.",
+                    "Request Submitted",
+                    JOptionPane.INFORMATION_MESSAGE);
+                dispose();
             }
         });
         
@@ -689,120 +693,6 @@ public class RiderSignupView extends JFrame {
             return true;
         } catch (Exception e) {
             return false;
-        }
-    }
-
-    private void handleSubmit() {
-        try {
-            // Get personal information
-            String firstName = firstNameField.getText().trim();
-            String surname = lastNameField.getText().trim();
-            String mobileNumber = mobileNumberField.getText().trim();
-            String gender = (String) genderComboBox.getSelectedItem();
-            String dateOfBirth = dateOfBirthField.getText().trim();
-            
-            // Get vehicle information
-            String brand = (String) brandComboBox.getSelectedItem();
-            String model = (String) modelComboBox.getSelectedItem();
-            String vehicleType = brand + " " + model;
-            String registrationNumber = registrationField.getText().trim();
-            String licenseNumber = taxTokenField.getText().trim(); // Using tax token as license number
-            
-            // Create RiderDAO instance
-            RiderDAO riderDAO = new RiderDAO();
-            
-            // Check if registration number already exists
-            if (riderDAO.isVehicleRegistrationTaken(registrationNumber)) {
-                JOptionPane.showMessageDialog(this,
-                    "A vehicle with this registration number already exists.",
-                    "Error",
-                    JOptionPane.ERROR_MESSAGE);
-                return;
-            }
-            
-            // Check if license number already exists
-            if (riderDAO.isLicenseNumberTaken(licenseNumber)) {
-                JOptionPane.showMessageDialog(this,
-                    "A rider with this license number already exists.",
-                    "Error",
-                    JOptionPane.ERROR_MESSAGE);
-                return;
-            }
-            
-            // Create UserDAO instance
-            UserDAO userDAO = new UserDAO();
-            
-            // Check if mobile number already exists
-            if (userDAO.emailOrMobileExists(mobileNumber)) {
-                JOptionPane.showMessageDialog(this,
-                    "An account with this mobile number already exists.",
-                    "Error",
-                    JOptionPane.ERROR_MESSAGE);
-                return;
-            }
-            
-            // First create the user account
-            // Using mobile number as password initially - user can change it later
-            boolean userCreated = userDAO.createUser(
-                firstName,
-                surname,
-                mobileNumber,  // Using mobile as email/mobile
-                mobileNumber,  // Using mobile as initial password
-                dateOfBirth,
-                gender,
-                "Rider"  // Account type
-            );
-            
-            if (!userCreated) {
-                JOptionPane.showMessageDialog(this,
-                    "Failed to create user account. Please try again.",
-                    "Error",
-                    JOptionPane.ERROR_MESSAGE);
-                return;
-            }
-            
-            // Get the newly created user's ID
-            int userId = userDAO.getUserIdByMobile(mobileNumber);
-            
-            if (userId == -1) {
-                JOptionPane.showMessageDialog(this,
-                    "Error retrieving user account. Please contact support.",
-                    "Error",
-                    JOptionPane.ERROR_MESSAGE);
-                return;
-            }
-            
-            // Create rider record
-            boolean success = riderDAO.createRider(userId, vehicleType, licenseNumber, registrationNumber);
-            
-            if (success) {
-                JOptionPane.showMessageDialog(this,
-                    "Rider registration successful!\n\n" +
-                    "Name: " + firstName + " " + surname + "\n" +
-                    "Mobile: " + mobileNumber + "\n" +
-                    "Vehicle: " + vehicleType + "\n" +
-                    "Registration: " + registrationNumber + "\n" +
-                    "License: " + licenseNumber + "\n\n" +
-                    "Note: Your initial password is your mobile number.\n" +
-                    "Please change it after your first login.",
-                    "Success",
-                    JOptionPane.INFORMATION_MESSAGE);
-                dispose();
-            } else {
-                // If rider creation fails, we should roll back the user creation
-                userDAO.deleteUser(userId);
-                JOptionPane.showMessageDialog(this,
-                    "Failed to complete rider registration. Please try again.",
-                    "Error",
-                    JOptionPane.ERROR_MESSAGE);
-            }
-            
-        } catch (Exception e) {
-            e.printStackTrace();
-            JOptionPane.showMessageDialog(this,
-                "An error occurred during registration: " + e.getMessage(),
-                "Error",
-                JOptionPane.ERROR_MESSAGE);
         }
     }
 } 

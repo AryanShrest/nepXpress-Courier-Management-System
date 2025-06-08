@@ -151,10 +151,17 @@ public class RegisterView extends javax.swing.JFrame {
      */
     public RegisterView() {
         initComponents();
+        // setSize(900, 600); // Comment this out
+        // setLocationRelativeTo(null); // Comment this out
+
+        addWindowListener(new java.awt.event.WindowAdapter() {
+            @Override
+            public void windowOpened(java.awt.event.WindowEvent e) {
+                setExtendedState(javax.swing.JFrame.MAXIMIZED_BOTH);
+            }
+        });
         originalLayout = (GroupLayout) jPanel2.getLayout();
         loginComponents = jPanel2.getComponents();
-        setSize(900, 600);
-        setLocationRelativeTo(null);
         
         // Set white background for panel2
         jPanel2.setBackground(new java.awt.Color(255, 255, 255));
@@ -969,7 +976,8 @@ public class RegisterView extends javax.swing.JFrame {
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
-                new RegisterView().setVisible(true);
+                RegisterView view = new RegisterView();
+                view.setVisible(true);
             }
         });
     }
