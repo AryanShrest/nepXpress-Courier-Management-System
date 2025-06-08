@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project-private xmlns="http://www.netbeans.org/ns/project-private/1">
+    <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
+    <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
+        <group>
+            <file>file:/C:/nepXpress%20-%20Management/nepXpress/src/nepxpress/NepXpress.java</file>
+            <file>file:/C:/nepXpress%20-%20Management/nepXpress/src/nepxpress/controller/RegisterController.java</file>
+            <file>file:/C:/nepXpress%20-%20Management/nepXpress/src/nepxpress/dao/UserDao.java</file>
+            <file>file:/C:/nepXpress%20-%20Management/nepXpress/src/nepxpress/database/DbConnection.java</file>
+            <file>file:/C:/nepXpress%20-%20Management/nepXpress/src/nepxpress/database/MySqlConnection.java</file>
+            <file>file:/C:/nepXpress%20-%20Management/nepXpress/src/nepxpress/model/UserData.java</file>
+            <file>file:/C:/nepXpress%20-%20Management/nepXpress/src/nepxpress/view/RegisterView.java</file>
+            <file>file:/C:/nepXpress%20-%20Management/nepXpress/src/nepxpress/database/DatabaseConnection.java</file>
+            <file>file:/C:/nepXpress%20-%20Management/nepXpress/src/nepxpress/view/Screenshot%202025-05-27%20184033.png</file>
+            <file>file:/C:/nepXpress%20-%20Management/nepXpress/src/nepxpress/view/RiderSignupView.java</file>
+            <file>file:/C:/nepXpress%20-%20Management/nepXpress/src/nepxpress/view/SignupView.java</file>
+            <file>file:/C:/nepXpress%20-%20Management/nepXpress/src/nepxpress/util/EmailUtil.java</file>
+        </group>
+    </open-files>
+</project-private>
