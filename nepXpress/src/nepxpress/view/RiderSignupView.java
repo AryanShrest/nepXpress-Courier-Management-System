@@ -38,10 +38,25 @@ public class RiderSignupView extends JFrame {
     private JLabel imagePreviewLabel;
 
     public RiderSignupView() {
+        initComponents();
+        setupUI();
+        
+        // Set window size to accommodate smaller preview panel
+        this.setResizable(false);
+        this.setSize(900, 700);  // Adjusted width for smaller preview
+        
+        // Center on screen
+        this.setLocationRelativeTo(null);
+        
+        // Prevent maximizing
+        this.setMaximizedBounds(new Rectangle(900, 700));
+        this.setExtendedState(JFrame.NORMAL);
+    }
+    
+    private void initComponents() {
         // Set up window properties
         setTitle("Rider Registration");
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        setResizable(false);
         
         // Create main content panel with card layout
         contentPanel = new JPanel(new CardLayout());
@@ -58,23 +73,244 @@ public class RiderSignupView extends JFrame {
         // Add content panel to frame
         add(contentPanel);
         
-        // Pack and center the window
-        pack();
-        setLocationRelativeTo(null);
-        
-        // Set a minimum size
-        setMinimumSize(new Dimension(400, 550));
-        
         // Add validation listeners
         addValidationListeners();
+    }
+    
+    private void setupUI() {
+        // Main container with padding
+        JPanel mainPanel = new JPanel(new BorderLayout(15, 0));  // Reduced gap between form and preview
+        mainPanel.setBackground(Color.WHITE);
+        mainPanel.setBorder(new EmptyBorder(15, 20, 15, 20));
 
-        // Maximize window when shown
-        addWindowListener(new java.awt.event.WindowAdapter() {
-            @Override
-            public void windowOpened(java.awt.event.WindowEvent e) {
-                setExtendedState(JFrame.MAXIMIZED_BOTH);
+        // Left side panel for form
+        JPanel leftPanel = new JPanel(new BorderLayout());
+        leftPanel.setBackground(Color.WHITE);
+
+        // Header panel with title
+        JPanel headerPanel = new JPanel();
+        headerPanel.setLayout(new BoxLayout(headerPanel, BoxLayout.Y_AXIS));
+        headerPanel.setBackground(Color.WHITE);
+        headerPanel.setBorder(new EmptyBorder(10, 15, 10, 15));
+
+        JLabel titleLabel = new JLabel("Rider Registration");
+        titleLabel.setFont(new Font("SansSerif", Font.BOLD, 22));  // Slightly smaller font
+        titleLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        headerPanel.add(titleLabel);
+        
+        // Add separator lines
+        JSeparator line1 = new JSeparator();
+        line1.setMaximumSize(new Dimension(Integer.MAX_VALUE, 1));
+        line1.setForeground(new Color(200, 200, 200));
+        headerPanel.add(Box.createVerticalStrut(6));  // Reduced spacing
+        headerPanel.add(line1);
+        
+        JSeparator line2 = new JSeparator();
+        line2.setMaximumSize(new Dimension(Integer.MAX_VALUE, 1));
+        line2.setForeground(new Color(200, 200, 200));
+        headerPanel.add(Box.createVerticalStrut(2));
+        headerPanel.add(line2);
+
+        leftPanel.add(headerPanel, BorderLayout.NORTH);
+
+        // Create preview panel (smaller size)
+        JPanel previewPanel = new JPanel(new BorderLayout(5, 5));
+        previewPanel.setBackground(Color.WHITE);
+        previewPanel.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(200, 200, 200)),
+            BorderFactory.createEmptyBorder(10, 10, 10, 10)
+        ));
+        previewPanel.setPreferredSize(new Dimension(250, 300));  // Smaller size
+
+        // Preview label
+        JLabel previewLabel = new JLabel("Photo Preview");
+        previewLabel.setHorizontalAlignment(JLabel.CENTER);
+        previewLabel.setFont(new Font("SansSerif", Font.BOLD, 14));
+        previewPanel.add(previewLabel, BorderLayout.NORTH);
+
+        // Image preview area
+        JLabel imagePreview = new JLabel("No image selected");
+        imagePreview.setHorizontalAlignment(JLabel.CENTER);
+        imagePreview.setVerticalAlignment(JLabel.CENTER);
+        imagePreview.setPreferredSize(new Dimension(230, 250));  // Slightly smaller than panel
+        previewPanel.add(imagePreview, BorderLayout.CENTER);
+
+        // Form Panel
+        JPanel formPanel = new JPanel();
+        formPanel.setLayout(new BoxLayout(formPanel, BoxLayout.Y_AXIS));
+        formPanel.setBackground(Color.WHITE);
+        formPanel.setBorder(new EmptyBorder(10, 15, 10, 15));
+
+        // Personal Information Section
+        JLabel personalInfoLabel = new JLabel("Personal Information");
+        personalInfoLabel.setFont(new Font("SansSerif", Font.BOLD, 16));
+        personalInfoLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        formPanel.add(personalInfoLabel);
+        formPanel.add(Box.createVerticalStrut(10));
+
+        // Photo Upload Section
+        JPanel photoSection = new JPanel(new BorderLayout(10, 0));
+        photoSection.setBackground(Color.WHITE);
+        photoSection.setMaximumSize(new Dimension(Integer.MAX_VALUE, 120));
+        photoSection.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        JPanel photoLabelPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+        photoLabelPanel.setBackground(Color.WHITE);
+        JLabel photoLabel = new JLabel("Upload your photo *");
+        photoLabel.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        photoLabelPanel.add(photoLabel);
+
+        // Photo upload controls
+        JPanel uploadControls = new JPanel();
+        uploadControls.setLayout(new BoxLayout(uploadControls, BoxLayout.Y_AXIS));
+        uploadControls.setBackground(Color.WHITE);
+
+        // Choose file button and label
+        JPanel fileChooserPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+        fileChooserPanel.setBackground(Color.WHITE);
+        JButton chooseFileBtn = new JButton("Choose File");
+        chooseFileBtn.setFont(new Font("SansSerif", Font.PLAIN, 12));
+        JLabel fileNameLabel = new JLabel("No file chosen");
+        fileNameLabel.setFont(new Font("SansSerif", Font.PLAIN, 12));
+        fileNameLabel.setBorder(BorderFactory.createEmptyBorder(0, 10, 0, 0));
+        fileChooserPanel.add(chooseFileBtn);
+        fileChooserPanel.add(fileNameLabel);
+        uploadControls.add(fileChooserPanel);
+
+        // Photo guidelines
+        String[] guidelines = {
+            "*Please upload a clear image of your full face from front",
+            "*Full face should be visible",
+            "*Image size cannot exceed 1MB"
+        };
+        
+        for (String guideline : guidelines) {
+            JLabel guideLabel = new JLabel(guideline);
+            guideLabel.setFont(new Font("SansSerif", Font.ITALIC, 11));
+            guideLabel.setForeground(Color.GRAY);
+            guideLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+            uploadControls.add(guideLabel);
+        }
+
+        photoSection.add(photoLabelPanel, BorderLayout.NORTH);
+        photoSection.add(uploadControls, BorderLayout.CENTER);
+        formPanel.add(photoSection);
+        formPanel.add(Box.createVerticalStrut(15));
+
+        // Add file chooser functionality with preview
+        chooseFileBtn.addActionListener(e -> {
+            JFileChooser fileChooser = new JFileChooser();
+            fileChooser.setFileFilter(new javax.swing.filechooser.FileFilter() {
+                public boolean accept(File f) {
+                    if (f.isDirectory()) return true;
+                    String name = f.getName().toLowerCase();
+                    return name.endsWith(".jpg") || name.endsWith(".jpeg") || 
+                           name.endsWith(".png");
+                }
+                public String getDescription() {
+                    return "Image files (*.jpg, *.jpeg, *.png)";
+                }
+            });
+
+            int result = fileChooser.showOpenDialog(this);
+            if (result == JFileChooser.APPROVE_OPTION) {
+                File selectedFile = fileChooser.getSelectedFile();
+                // Check file size (1MB = 1048576 bytes)
+                if (selectedFile.length() > 1048576) {
+                    JOptionPane.showMessageDialog(this,
+                        "File size exceeds 1MB limit. Please choose a smaller file.",
+                        "File Size Error",
+                        JOptionPane.ERROR_MESSAGE);
+                    fileNameLabel.setText("No file chosen");
+                    imagePreview.setIcon(null);
+                    imagePreview.setText("No image selected");
+                } else {
+                    fileNameLabel.setText(selectedFile.getName());
+                    try {
+                        // Load and scale the image
+                        ImageIcon imageIcon = new ImageIcon(selectedFile.getPath());
+                        Image image = imageIcon.getImage();
+                        
+                        // Calculate scaling to fit preview panel while maintaining aspect ratio
+                        int previewWidth = 230;  // Slightly smaller than panel
+                        int previewHeight = 250;
+                        
+                        double scale = Math.min(
+                            (double) previewWidth / image.getWidth(null),
+                            (double) previewHeight / image.getHeight(null)
+                        );
+                        
+                        int scaledWidth = (int) (image.getWidth(null) * scale);
+                        int scaledHeight = (int) (image.getHeight(null) * scale);
+                        
+                        Image scaledImage = image.getScaledInstance(scaledWidth, scaledHeight, Image.SCALE_SMOOTH);
+                        imagePreview.setIcon(new ImageIcon(scaledImage));
+                        imagePreview.setText("");  // Clear the "No image selected" text
+                    } catch (Exception ex) {
+                        JOptionPane.showMessageDialog(this,
+                            "Error loading image: " + ex.getMessage(),
+                            "Image Error",
+                            JOptionPane.ERROR_MESSAGE);
+                        imagePreview.setIcon(null);
+                        imagePreview.setText("Error loading image");
+                    }
+                }
             }
         });
+
+        // Rest of the personal information fields
+        addFormField(formPanel, "First Name:", createStyledTextField(), 8);
+        addFormField(formPanel, "Last Name:", createStyledTextField(), 8);
+        addFormField(formPanel, "Email:", createStyledTextField(), 8);
+        addFormField(formPanel, "Mobile:", createStyledTextField(), 8);
+        addFormField(formPanel, "Date of Birth:", createStyledTextField(), 8);
+        addFormField(formPanel, "Gender:", createGenderComboBox(), 8);
+        addFormField(formPanel, "Address:", createStyledTextField(), 8);
+        addFormField(formPanel, "City:", createStyledTextField(), 8);
+
+        // Vehicle Information Section
+        formPanel.add(Box.createVerticalStrut(15));
+        JLabel vehicleInfoLabel = new JLabel("Vehicle Information");
+        vehicleInfoLabel.setFont(new Font("SansSerif", Font.BOLD, 16));
+        vehicleInfoLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        formPanel.add(vehicleInfoLabel);
+        formPanel.add(Box.createVerticalStrut(10));
+
+        // Vehicle Information fields
+        addFormField(formPanel, "Vehicle Company:", createVehicleCompanyField(), 8);
+        addFormField(formPanel, "License Number:", createLicenseField(), 8);
+        addFormField(formPanel, "Vehicle Number:", createVehicleNumberField(), 8);
+        addFormField(formPanel, "Experience (Years):", createExperienceField(), 8);
+        addFormField(formPanel, "Area of Operation:", createAreaField(), 8);
+
+        // Submit Button
+        JButton submitButton = new JButton("Submit");
+        submitButton.setBackground(new Color(242, 140, 72));
+        submitButton.setForeground(Color.WHITE);
+        submitButton.setFont(new Font("SansSerif", Font.BOLD, 14));
+        submitButton.setMaximumSize(new Dimension(120, 35));  // Slightly smaller button
+        submitButton.setBorderPainted(false);
+        submitButton.setFocusPainted(false);
+        submitButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        submitButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        // Add some spacing before the button
+        formPanel.add(Box.createVerticalStrut(15));
+        formPanel.add(submitButton);
+
+        // Add scroll support for the form
+        JScrollPane scrollPane = new JScrollPane(formPanel);
+        scrollPane.setBorder(null);
+        scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        scrollPane.getVerticalScrollBar().setUnitIncrement(16);
+        
+        leftPanel.add(scrollPane, BorderLayout.CENTER);
+        
+        // Add left panel and preview panel to main panel
+        mainPanel.add(leftPanel, BorderLayout.CENTER);
+        mainPanel.add(previewPanel, BorderLayout.EAST);
+        
+        setContentPane(mainPanel);
     }
     
     private void createPersonalInfoPanel() {
@@ -683,5 +919,61 @@ public class RiderSignupView extends JFrame {
         } catch (Exception e) {
             return false;
         }
+    }
+
+    private void addFormField(JPanel panel, String label, JComponent field, int spacing) {
+        JPanel fieldPanel = new JPanel();
+        fieldPanel.setLayout(new BoxLayout(fieldPanel, BoxLayout.X_AXIS));
+        fieldPanel.setBackground(Color.WHITE);
+        fieldPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 35));  // Control field height
+
+        JLabel fieldLabel = new JLabel(label);
+        fieldLabel.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        fieldLabel.setPreferredSize(new Dimension(150, 25));  // Fixed label width
+
+        fieldPanel.add(fieldLabel);
+        fieldPanel.add(Box.createHorizontalStrut(10));
+        fieldPanel.add(field);
+
+        panel.add(fieldPanel);
+        panel.add(Box.createVerticalStrut(spacing));  // Reduced vertical spacing
+    }
+
+    private JTextField createStyledTextField() {
+        JTextField field = new JTextField();
+        field.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        field.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(200, 200, 200)),
+            BorderFactory.createEmptyBorder(5, 8, 5, 8)  // Reduced padding
+        ));
+        return field;
+    }
+
+    // Helper methods for creating specific fields
+    private JTextField createVehicleCompanyField() {
+        return createStyledTextField();
+    }
+
+    private JTextField createLicenseField() {
+        return createStyledTextField();
+    }
+
+    private JTextField createVehicleNumberField() {
+        return createStyledTextField();
+    }
+
+    private JTextField createExperienceField() {
+        return createStyledTextField();
+    }
+
+    private JTextField createAreaField() {
+        return createStyledTextField();
+    }
+
+    private JComboBox<String> createGenderComboBox() {
+        JComboBox<String> comboBox = new JComboBox<>(new String[]{"Select Gender", "Male", "Female", "Other"});
+        comboBox.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        comboBox.setBackground(Color.WHITE);
+        return comboBox;
     }
 } 

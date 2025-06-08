@@ -450,7 +450,8 @@ public class RegisterView extends javax.swing.JFrame {
                     // User is logged in
                     // Open the user dashboard
                     SwingUtilities.invokeLater(() -> {
-                        new DashboardFrame().setVisible(true);
+                        DashboardFrame dashboard = new DashboardFrame();
+                        dashboard.setVisible(true);
                     });
                     dispose();
                 } else {

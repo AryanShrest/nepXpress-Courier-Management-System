@@ -102,19 +102,10 @@ public class ComplaintsFrame extends JFrame {
         fieldsPanel.add(Box.createVerticalStrut(20));
 
         // Description Text Area
-        descriptionArea = new JTextArea();
-        descriptionArea.setFont(new Font("SansSerif", Font.PLAIN, 14));
-        descriptionArea.setLineWrap(true);
-        descriptionArea.setWrapStyleWord(true);
-        descriptionArea.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(new Color(200, 200, 200)),
-            BorderFactory.createEmptyBorder(10, 10, 10, 10)
-        ));
+        descriptionArea = createStyledTextArea("Describe Your Issue");
         descriptionArea.setRows(8);
         JScrollPane scrollPane = new JScrollPane(descriptionArea);
         scrollPane.setMaximumSize(new Dimension(Integer.MAX_VALUE, 200));
-        descriptionArea.setText("Describe Your Issue");
-        descriptionArea.setForeground(Color.GRAY);
 
         fieldsPanel.add(scrollPane);
         fieldsPanel.add(Box.createVerticalStrut(30));
@@ -165,15 +156,74 @@ public class ComplaintsFrame extends JFrame {
     }
 
     private JTextField createStyledTextField(String placeholder) {
-        JTextField field = new JTextField(placeholder);
+        JTextField field = new JTextField();
         field.setFont(new Font("SansSerif", Font.PLAIN, 14));
-        field.setForeground(Color.GRAY);
         field.setBorder(BorderFactory.createCompoundBorder(
             BorderFactory.createLineBorder(new Color(200, 200, 200)),
             BorderFactory.createEmptyBorder(10, 10, 10, 10)
         ));
         field.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
+        
+        // Set initial placeholder
+        field.setText(placeholder);
+        field.setForeground(Color.GRAY);
+        
+        // Add focus listeners to handle placeholder behavior
+        field.addFocusListener(new java.awt.event.FocusAdapter() {
+            @Override
+            public void focusGained(java.awt.event.FocusEvent evt) {
+                if (field.getText().equals(placeholder)) {
+                    field.setText("");
+                    field.setForeground(Color.BLACK);
+                }
+            }
+            
+            @Override
+            public void focusLost(java.awt.event.FocusEvent evt) {
+                if (field.getText().isEmpty()) {
+                    field.setText(placeholder);
+                    field.setForeground(Color.GRAY);
+                }
+            }
+        });
+        
         return field;
+    }
+
+    private JTextArea createStyledTextArea(String placeholder) {
+        JTextArea area = new JTextArea();
+        area.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        area.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(200, 200, 200)),
+            BorderFactory.createEmptyBorder(10, 10, 10, 10)
+        ));
+        area.setLineWrap(true);
+        area.setWrapStyleWord(true);
+        
+        // Set initial placeholder
+        area.setText(placeholder);
+        area.setForeground(Color.GRAY);
+        
+        // Add focus listeners to handle placeholder behavior
+        area.addFocusListener(new java.awt.event.FocusAdapter() {
+            @Override
+            public void focusGained(java.awt.event.FocusEvent evt) {
+                if (area.getText().equals(placeholder)) {
+                    area.setText("");
+                    area.setForeground(Color.BLACK);
+                }
+            }
+            
+            @Override
+            public void focusLost(java.awt.event.FocusEvent evt) {
+                if (area.getText().isEmpty()) {
+                    area.setText(placeholder);
+                    area.setForeground(Color.GRAY);
+                }
+            }
+        });
+        
+        return area;
     }
 
     private void clearForm() {

@@ -159,16 +159,7 @@ public class ContactsFrame extends JFrame {
         emailField = createFormField("Email*");
         
         // Message Area
-        messageArea = new JTextArea();
-        messageArea.setFont(new Font("SansSerif", Font.PLAIN, 14));
-        messageArea.setLineWrap(true);
-        messageArea.setWrapStyleWord(true);
-        messageArea.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(new Color(200, 200, 200)),
-            BorderFactory.createEmptyBorder(10, 10, 10, 10)
-        ));
-        messageArea.setText("Message*");
-        messageArea.setForeground(Color.GRAY);
+        messageArea = createStyledTextArea("Message*");
         JScrollPane scrollPane = new JScrollPane(messageArea);
         scrollPane.setMaximumSize(new Dimension(Integer.MAX_VALUE, 150));
         
@@ -214,15 +205,74 @@ public class ContactsFrame extends JFrame {
     }
 
     private JTextField createFormField(String placeholder) {
-        JTextField field = new JTextField(placeholder);
+        JTextField field = new JTextField();
         field.setFont(new Font("SansSerif", Font.PLAIN, 14));
-        field.setForeground(Color.GRAY);
         field.setBorder(BorderFactory.createCompoundBorder(
             BorderFactory.createLineBorder(new Color(200, 200, 200)),
             BorderFactory.createEmptyBorder(10, 10, 10, 10)
         ));
         field.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
+        
+        // Set initial placeholder
+        field.setText(placeholder);
+        field.setForeground(Color.GRAY);
+        
+        // Add focus listeners to handle placeholder behavior
+        field.addFocusListener(new java.awt.event.FocusAdapter() {
+            @Override
+            public void focusGained(java.awt.event.FocusEvent evt) {
+                if (field.getText().equals(placeholder)) {
+                    field.setText("");
+                    field.setForeground(Color.BLACK);
+                }
+            }
+            
+            @Override
+            public void focusLost(java.awt.event.FocusEvent evt) {
+                if (field.getText().isEmpty()) {
+                    field.setText(placeholder);
+                    field.setForeground(Color.GRAY);
+                }
+            }
+        });
+        
         return field;
+    }
+
+    private JTextArea createStyledTextArea(String placeholder) {
+        JTextArea area = new JTextArea();
+        area.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        area.setLineWrap(true);
+        area.setWrapStyleWord(true);
+        area.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(200, 200, 200)),
+            BorderFactory.createEmptyBorder(10, 10, 10, 10)
+        ));
+        
+        // Set initial placeholder
+        area.setText(placeholder);
+        area.setForeground(Color.GRAY);
+        
+        // Add focus listeners to handle placeholder behavior
+        area.addFocusListener(new java.awt.event.FocusAdapter() {
+            @Override
+            public void focusGained(java.awt.event.FocusEvent evt) {
+                if (area.getText().equals(placeholder)) {
+                    area.setText("");
+                    area.setForeground(Color.BLACK);
+                }
+            }
+            
+            @Override
+            public void focusLost(java.awt.event.FocusEvent evt) {
+                if (area.getText().isEmpty()) {
+                    area.setText(placeholder);
+                    area.setForeground(Color.GRAY);
+                }
+            }
+        });
+        
+        return area;
     }
 
     private void handleContactSubmit() {

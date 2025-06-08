@@ -48,10 +48,20 @@ public class DashboardFrame extends JFrame {
 
     /* ─────  CONSTRUCTOR  ───── */
     public DashboardFrame() {
+        initComponents();
+        setupUI();
+        
+        // Set frame to open in maximum size
+        this.setExtendedState(JFrame.MAXIMIZED_BOTH);
+        this.setMinimumSize(new Dimension(800, 600));  // Set minimum size as fallback
+        
+        // Center on screen
+        this.setLocationRelativeTo(null);
+    }
+
+    private void initComponents() {
         setTitle("nepXpress — Dashboard");
         setDefaultCloseOperation(EXIT_ON_CLOSE);
-        setSize(1280, 720);
-        setLocationRelativeTo(null);
         setLayout(new BorderLayout());
 
         add(createHeader(),  BorderLayout.NORTH);
@@ -59,6 +69,10 @@ public class DashboardFrame extends JFrame {
         add(createMainView(),BorderLayout.CENTER);
 
         selectView("Dashboard"); // default selection
+    }
+
+    private void setupUI() {
+        // ... existing code ...
     }
 
     /* ───────────────── HEADER ───────────────── */
