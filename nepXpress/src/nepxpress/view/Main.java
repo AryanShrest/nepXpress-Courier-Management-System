@@ -1,6 +1,6 @@
-package com.cms;
+package nepxpress.view;
 
-import com.cms.views.Parcels;
+import nepxpress.view.Parcels;
 import javax.swing.*;
 import java.awt.*;
 

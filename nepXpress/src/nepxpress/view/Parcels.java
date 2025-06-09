@@ -6,7 +6,7 @@ import java.awt.*;
 import java.awt.event.*;
 import javax.swing.border.*;
 import java.sql.*;
-import com.cms.database.DatabaseConnection;
+import nepxpress.database.DatabaseConnection;
 
 public class Parcels extends JPanel {
     private JTable table;
