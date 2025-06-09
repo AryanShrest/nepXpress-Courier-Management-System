@@ -127,6 +127,11 @@ public class DashboardFrame extends JFrame {
         contactNav.setBorder(new EmptyBorder(2, 0, 2, 0));
         navPanel.add(contactNav);
         
+        // Add Deactivate Account button
+        NavItem deactivateNav = makeNav("Deactivate Account", null);
+        deactivateNav.setBorder(new EmptyBorder(2, 0, 2, 0));
+        navPanel.add(deactivateNav);
+        
         side.add(navPanel);
         side.add(Box.createVerticalGlue());
         
@@ -182,6 +187,10 @@ public class DashboardFrame extends JFrame {
         ContactsFrame contactsFrame = new ContactsFrame();
         JPanel contactsPanel = contactsFrame.getMainPanel();
 
+        // Create deactivate account panel by getting content from DeactivateAccountFrame
+        DeactivateAccountFrame deactivateAccountFrame = new DeactivateAccountFrame();
+        JPanel deactivateAccountPanel = deactivateAccountFrame.getMainPanel();
+
         // Add all panels to card layout
         mainView.add(dashboardPanel, "Dashboard");
         mainView.add(dispatchPanel, "Dispatch");
@@ -189,6 +198,7 @@ public class DashboardFrame extends JFrame {
         mainView.add(trackParcelsPanel, "Track Parcels");
         mainView.add(complaintsPanel, "Complaints");
         mainView.add(contactsPanel, "Contact");
+        mainView.add(deactivateAccountPanel, "Deactivate Account");
 
         return mainView;
     }
