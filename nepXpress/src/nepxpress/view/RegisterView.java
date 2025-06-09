@@ -4,14 +4,12 @@
  */
 package nepxpress.view;
 
-import java.awt.*;
-import javax.swing.*;
-import javax.swing.border.*;
-import java.awt.event.*;
-import nepxpress.util.EmailService;
-import java.awt.Graphics;
-import java.awt.RenderingHints;
-import nepxpress.util.EmailService;
+import java.awt.BorderLayout;
+import java.awt.Dimension;
+import javax.swing.JLayeredPane;
+import javax.swing.GroupLayout;
+import javax.swing.LayoutStyle;
+import java.awt.Container;
 
 /**
  *
@@ -58,49 +56,10 @@ public class RegisterView extends javax.swing.JFrame {
     }
 
     private class RoundedPasswordField extends javax.swing.JPasswordField {
-        private String placeholder;
         private int radius;
-        
+
         public RoundedPasswordField(int radius) {
             super();
-            this.radius = radius;
-            setOpaque(false);
-            setBorder(BorderFactory.createEmptyBorder(5, 15, 5, 15));
-            setPreferredSize(new Dimension(200, 35));
-            setBackground(new Color(240, 240, 240));
-        }
-        
-        public void setPlaceholder(String placeholder) {
-            this.placeholder = placeholder;
-        }
-        
-        @Override
-        protected void paintComponent(Graphics g) {
-            Graphics2D g2 = (Graphics2D) g.create();
-            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-            g2.setColor(getBackground());
-            g2.fillRoundRect(0, 0, getWidth(), getHeight(), radius, radius);
-            g2.dispose();
-            
-            super.paintComponent(g);
-            
-            if (getPassword().length == 0 && placeholder != null) {
-                g2 = (Graphics2D) g.create();
-                g2.setColor(Color.GRAY);
-                g2.setFont(getFont());
-                g2.drawString(placeholder, 15, (getHeight() + g2.getFontMetrics().getAscent()) / 2 - 2);
-                g2.dispose();
-            }
-        }
-    }
-
-    private class PlaceholderTextField extends javax.swing.JTextField {
-        private String placeholder;
-        private int radius;
-
-        public PlaceholderTextField(String placeholder, int radius) {
-            super();
-            this.placeholder = placeholder;
             this.radius = radius;
             setOpaque(false);
         }
@@ -112,33 +71,16 @@ public class RegisterView extends javax.swing.JFrame {
             g2.setColor(getBackground());
             g2.fillRoundRect(0, 0, getWidth(), getHeight(), radius, radius);
             g2.dispose();
-            
             super.paintComponent(g);
-
-            if (getText().isEmpty() && placeholder != null) {
-                g2 = (java.awt.Graphics2D) g.create();
-                g2.setColor(new Color(150, 150, 150));
-                g2.setFont(getFont());
-                java.awt.FontMetrics metrics = g2.getFontMetrics();
-                int x = 15;
-                int y = (getHeight() - metrics.getHeight()) / 2 + metrics.getAscent();
-                g2.drawString(placeholder, x, y);
-                g2.dispose();
-            }
         }
     }
-
-    // Store the original login panel layout
-    private GroupLayout originalLayout;
-    private Component[] loginComponents;
 
     /**
      * Creates new form RegisterView
      */
     public RegisterView() {
         initComponents();
-        originalLayout = (GroupLayout) jPanel2.getLayout();
-        loginComponents = jPanel2.getComponents();
+        // Set window size and center it
         setSize(900, 600);
         setLocationRelativeTo(null);
         
@@ -160,7 +102,7 @@ public class RegisterView extends javax.swing.JFrame {
         jLabel3.addMouseListener(new java.awt.event.MouseAdapter() {
             @Override
             public void mouseClicked(java.awt.event.MouseEvent evt) {
-                switchToForgotPassword();
+                new ForgotPasswordView().setVisible(true);
             }
         });
     }
@@ -371,363 +313,6 @@ public class RegisterView extends javax.swing.JFrame {
 
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {
         // TODO add your handling code here:
-    }
-
-    private void switchToForgotPassword() {
-        // Store the current size of white panel
-        Dimension whiteBoxSize = jPanel2.getSize();
-        
-        // Create forgot password components
-        JPanel forgotPanel = new RoundedPanel(40);
-        forgotPanel.setBackground(Color.WHITE);
-        forgotPanel.setLayout(new GroupLayout(forgotPanel));
-        
-        // Title
-        JLabel titleLabel = new JLabel("Forgot Password");
-        titleLabel.setFont(new Font("Segoe UI", 0, 24));
-        
-        // Email field
-        PlaceholderTextField emailField = new PlaceholderTextField("Email Address", 25);
-        emailField.setFont(new Font("Segoe UI", 0, 14));
-        emailField.setBorder(javax.swing.BorderFactory.createEmptyBorder(5, 15, 5, 15));
-        emailField.setBackground(new Color(240, 240, 240));
-        
-        // Message
-        JLabel messageLabel = new JLabel("Once you have submitted the form, you will receive an email");
-        messageLabel.setFont(new Font("Segoe UI", 0, 12));
-        messageLabel.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-
-        JLabel messageLabel2 = new JLabel("if the given email address exist in our system.");
-        messageLabel2.setFont(new Font("Segoe UI", 0, 12));
-        messageLabel2.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-
-        // Reset button
-        JButton resetButton = new JButton("Reset");
-        resetButton.setBackground(new Color(157, 205, 90));
-        resetButton.setForeground(Color.BLACK);
-        resetButton.setFocusPainted(false);
-        resetButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                String email = emailField.getText().trim();
-                if (email.isEmpty()) {
-                    JOptionPane.showMessageDialog(RegisterView.this,
-                        "Please enter your email address.",
-                        "Error",
-                        JOptionPane.ERROR_MESSAGE);
-                    return;
-                }
-                
-                if (!isValidEmail(email)) {
-                    JOptionPane.showMessageDialog(RegisterView.this,
-                        "Please enter a valid email address.",
-                        "Error",
-                        JOptionPane.ERROR_MESSAGE);
-                    return;
-                }
-
-                // Generate and send verification code
-                String verificationCode = EmailService.generateVerificationCode();
-                
-                // Show loading cursor
-                setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-                resetButton.setEnabled(false);
-                
-                // Send email in background thread
-                new SwingWorker<Boolean, Void>() {
-                    @Override
-                    protected Boolean doInBackground() throws Exception {
-                        return EmailService.sendVerificationCode(email, verificationCode);
-                    }
-                    
-                    @Override
-                    protected void done() {
-                        try {
-                            boolean success = get();
-                            if (success) {
-                                // Store verification code and email for validation
-                                switchToVerificationView(email, verificationCode);
-                            } else {
-                                JOptionPane.showMessageDialog(RegisterView.this,
-                                    "Failed to send verification code. Please try again.",
-                                    "Error",
-                                    JOptionPane.ERROR_MESSAGE);
-                            }
-                        } catch (Exception ex) {
-                            ex.printStackTrace();
-                            JOptionPane.showMessageDialog(RegisterView.this,
-                                "An error occurred. Please try again.",
-                                "Error",
-                                JOptionPane.ERROR_MESSAGE);
-                        } finally {
-                            // Restore cursor and button
-                            setCursor(Cursor.getDefaultCursor());
-                            resetButton.setEnabled(true);
-                        }
-                    }
-                }.execute();
-            }
-        });
-
-        // Back to login link
-        JLabel backToLoginLabel = new JLabel("<html><u>Back to Login</u></html>");
-        backToLoginLabel.setFont(new Font("Segoe UI", 0, 12));
-        backToLoginLabel.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        backToLoginLabel.setForeground(new Color(76, 115, 13));
-        backToLoginLabel.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseClicked(java.awt.event.MouseEvent evt) {
-                switchToLogin();
-            }
-        });
-
-        // Setup GroupLayout
-        GroupLayout layout = (GroupLayout) forgotPanel.getLayout();
-        layout.setHorizontalGroup(
-            layout.createParallelGroup(GroupLayout.Alignment.CENTER)
-            .addGroup(layout.createSequentialGroup()
-                .addContainerGap(40, Short.MAX_VALUE)
-                .addGroup(layout.createParallelGroup(GroupLayout.Alignment.CENTER)
-                    .addComponent(titleLabel)
-                    .addComponent(emailField, GroupLayout.PREFERRED_SIZE, 293, GroupLayout.PREFERRED_SIZE)
-                    .addComponent(messageLabel)
-                    .addComponent(messageLabel2)
-                    .addComponent(resetButton, GroupLayout.PREFERRED_SIZE, 293, GroupLayout.PREFERRED_SIZE)
-                    .addComponent(backToLoginLabel))
-                .addContainerGap(40, Short.MAX_VALUE))
-        );
-        
-        layout.setVerticalGroup(
-            layout.createSequentialGroup()
-            .addGap(30)
-            .addComponent(titleLabel)
-            .addGap(30)
-            .addComponent(emailField, GroupLayout.PREFERRED_SIZE, 28, GroupLayout.PREFERRED_SIZE)
-            .addGap(20)
-            .addComponent(messageLabel)
-            .addGap(5)
-            .addComponent(messageLabel2)
-            .addGap(30)
-            .addComponent(resetButton, GroupLayout.PREFERRED_SIZE, 28, GroupLayout.PREFERRED_SIZE)
-            .addGap(20)
-            .addComponent(backToLoginLabel)
-            .addContainerGap(30, Short.MAX_VALUE)
-        );
-
-        // Remove all components from white panel
-        jPanel2.removeAll();
-        
-        // Add forgot password panel
-        jPanel2.setLayout(new BorderLayout());
-        jPanel2.add(forgotPanel, BorderLayout.CENTER);
-        
-        // Ensure the white panel maintains its size
-        jPanel2.setPreferredSize(whiteBoxSize);
-        jPanel2.setSize(whiteBoxSize);
-        
-        // Refresh the panel
-        jPanel2.revalidate();
-        jPanel2.repaint();
-    }
-
-    private boolean isValidEmail(String email) {
-        String emailRegex = "^[A-Za-z0-9+_.-]+@(.+)$";
-        return email.matches(emailRegex);
-    }
-
-    private void switchToVerificationView(String email, String verificationCode) {
-        // Create verification panel
-        JPanel verificationPanel = new RoundedPanel(40);
-        verificationPanel.setBackground(Color.WHITE);
-        verificationPanel.setLayout(new GroupLayout(verificationPanel));
-        
-        // Title
-        JLabel titleLabel = new JLabel("Enter Verification Code");
-        titleLabel.setFont(new Font("Segoe UI", 0, 24));
-        
-        // Message
-        JLabel messageLabel = new JLabel("We have sent a verification code to your email:");
-        messageLabel.setFont(new Font("Segoe UI", 0, 12));
-        
-        JLabel emailLabel = new JLabel(email);
-        emailLabel.setFont(new Font("Segoe UI", Font.BOLD, 12));
-        
-        // Code input field
-        PlaceholderTextField codeField = new PlaceholderTextField("Enter 6-digit code", 25);
-        codeField.setFont(new Font("Segoe UI", 0, 14));
-        codeField.setBorder(javax.swing.BorderFactory.createEmptyBorder(5, 15, 5, 15));
-        codeField.setBackground(new Color(240, 240, 240));
-        
-        // Verify button
-        JButton verifyButton = new JButton("Verify");
-        verifyButton.setBackground(new Color(157, 205, 90));
-        verifyButton.setForeground(Color.BLACK);
-        verifyButton.setFocusPainted(false);
-        verifyButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                String enteredCode = codeField.getText().trim();
-                if (enteredCode.equals(verificationCode)) {
-                    // Code matches - show new password form
-                    switchToNewPasswordView(email);
-                } else {
-                    JOptionPane.showMessageDialog(RegisterView.this,
-                        "Invalid verification code. Please try again.",
-                        "Error",
-                        JOptionPane.ERROR_MESSAGE);
-                }
-            }
-        });
-
-        // Layout components
-        GroupLayout layout = (GroupLayout) verificationPanel.getLayout();
-        layout.setHorizontalGroup(
-            layout.createParallelGroup(GroupLayout.Alignment.CENTER)
-            .addGroup(layout.createSequentialGroup()
-                .addContainerGap(40, Short.MAX_VALUE)
-                .addGroup(layout.createParallelGroup(GroupLayout.Alignment.CENTER)
-                    .addComponent(titleLabel)
-                    .addComponent(messageLabel)
-                    .addComponent(emailLabel)
-                    .addComponent(codeField, GroupLayout.PREFERRED_SIZE, 293, GroupLayout.PREFERRED_SIZE)
-                    .addComponent(verifyButton, GroupLayout.PREFERRED_SIZE, 293, GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(40, Short.MAX_VALUE))
-        );
-        
-        layout.setVerticalGroup(
-            layout.createSequentialGroup()
-            .addGap(30)
-            .addComponent(titleLabel)
-            .addGap(20)
-            .addComponent(messageLabel)
-            .addGap(5)
-            .addComponent(emailLabel)
-            .addGap(20)
-            .addComponent(codeField, GroupLayout.PREFERRED_SIZE, 28, GroupLayout.PREFERRED_SIZE)
-            .addGap(20)
-            .addComponent(verifyButton, GroupLayout.PREFERRED_SIZE, 28, GroupLayout.PREFERRED_SIZE)
-            .addContainerGap(30, Short.MAX_VALUE)
-        );
-
-        // Switch to verification panel
-        jPanel2.removeAll();
-        jPanel2.setLayout(new BorderLayout());
-        jPanel2.add(verificationPanel, BorderLayout.CENTER);
-        jPanel2.revalidate();
-        jPanel2.repaint();
-    }
-
-    private void switchToNewPasswordView(String email) {
-        // Create new password panel
-        JPanel newPasswordPanel = new RoundedPanel(40);
-        newPasswordPanel.setBackground(Color.WHITE);
-        newPasswordPanel.setLayout(new GroupLayout(newPasswordPanel));
-        
-        // Title
-        JLabel titleLabel = new JLabel("Create New Password");
-        titleLabel.setFont(new Font("Segoe UI", 0, 24));
-        
-        // Password fields
-        RoundedPasswordField newPasswordField = new RoundedPasswordField(25);
-        newPasswordField.setPlaceholder("New password");
-        
-        RoundedPasswordField confirmPasswordField = new RoundedPasswordField(25);
-        confirmPasswordField.setPlaceholder("Confirm new password");
-        
-        // Submit button
-        JButton submitButton = new JButton("Change Password");
-        submitButton.setBackground(new Color(157, 205, 90));
-        submitButton.setForeground(Color.BLACK);
-        submitButton.setFocusPainted(false);
-        submitButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                String newPassword = new String(newPasswordField.getPassword());
-                String confirmPassword = new String(confirmPasswordField.getPassword());
-                
-                if (newPassword.isEmpty() || confirmPassword.isEmpty()) {
-                    JOptionPane.showMessageDialog(RegisterView.this,
-                        "Please fill in all fields.",
-                        "Error",
-                        JOptionPane.ERROR_MESSAGE);
-                    return;
-                }
-                
-                if (!newPassword.equals(confirmPassword)) {
-                    JOptionPane.showMessageDialog(RegisterView.this,
-                        "Passwords do not match.",
-                        "Error",
-                        JOptionPane.ERROR_MESSAGE);
-                    return;
-                }
-                
-                // TODO: Update password in database
-                
-                JOptionPane.showMessageDialog(RegisterView.this,
-                    "Password has been successfully changed.",
-                    "Success",
-                    JOptionPane.INFORMATION_MESSAGE);
-                    
-                switchToLogin();
-            }
-        });
-
-        // Layout components
-        GroupLayout layout = (GroupLayout) newPasswordPanel.getLayout();
-        layout.setHorizontalGroup(
-            layout.createParallelGroup(GroupLayout.Alignment.CENTER)
-            .addGroup(layout.createSequentialGroup()
-                .addContainerGap(40, Short.MAX_VALUE)
-                .addGroup(layout.createParallelGroup(GroupLayout.Alignment.CENTER)
-                    .addComponent(titleLabel)
-                    .addComponent(newPasswordField, GroupLayout.PREFERRED_SIZE, 293, GroupLayout.PREFERRED_SIZE)
-                    .addComponent(confirmPasswordField, GroupLayout.PREFERRED_SIZE, 293, GroupLayout.PREFERRED_SIZE)
-                    .addComponent(submitButton, GroupLayout.PREFERRED_SIZE, 293, GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(40, Short.MAX_VALUE))
-        );
-        
-        layout.setVerticalGroup(
-            layout.createSequentialGroup()
-            .addGap(30)
-            .addComponent(titleLabel)
-            .addGap(30)
-            .addComponent(newPasswordField, GroupLayout.PREFERRED_SIZE, 28, GroupLayout.PREFERRED_SIZE)
-            .addGap(20)
-            .addComponent(confirmPasswordField, GroupLayout.PREFERRED_SIZE, 28, GroupLayout.PREFERRED_SIZE)
-            .addGap(30)
-            .addComponent(submitButton, GroupLayout.PREFERRED_SIZE, 28, GroupLayout.PREFERRED_SIZE)
-            .addContainerGap(30, Short.MAX_VALUE)
-        );
-
-        // Switch to new password panel
-        jPanel2.removeAll();
-        jPanel2.setLayout(new BorderLayout());
-        jPanel2.add(newPasswordPanel, BorderLayout.CENTER);
-        jPanel2.revalidate();
-        jPanel2.repaint();
-    }
-
-    private void switchToLogin() {
-        // Store the current size
-        Dimension whiteBoxSize = jPanel2.getSize();
-        
-        // Remove all components from white panel
-        jPanel2.removeAll();
-        
-        // Restore original layout
-        jPanel2.setLayout(originalLayout);
-        
-        // Restore all original components
-        for (Component comp : loginComponents) {
-            jPanel2.add(comp);
-        }
-        
-        // Ensure the white panel maintains its size
-        jPanel2.setPreferredSize(whiteBoxSize);
-        jPanel2.setSize(whiteBoxSize);
-        
-        // Refresh the panel
-        jPanel2.revalidate();
-        jPanel2.repaint();
     }
 
     /**
