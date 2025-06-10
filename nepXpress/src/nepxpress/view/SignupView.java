@@ -111,8 +111,8 @@ public class SignupView extends javax.swing.JFrame {
         
         // Sign up button
         signUpButton = new JButton("Sign Up");
-        signUpButton.setBackground(new Color(0, 164, 0));
-        signUpButton.setForeground(Color.WHITE);
+        signUpButton.setBackground(new Color(157, 205, 90));
+        signUpButton.setForeground(Color.BLACK);
         signUpButton.setFocusPainted(false);
         signUpButton.setPreferredSize(new Dimension(293, 35));  // Set specific width to match other fields
         
