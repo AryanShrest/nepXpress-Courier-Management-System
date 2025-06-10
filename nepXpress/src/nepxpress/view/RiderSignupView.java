@@ -8,10 +8,6 @@ import javax.imageio.ImageIO;
 import javax.imageio.stream.ImageInputStream;
 import nepxpress.database.RiderDAO;
 import nepxpress.database.UserDAO;
-import java.text.SimpleDateFormat;
-import java.text.ParseException;
-import java.util.Date;
-import java.util.Calendar;
 
 public class RiderSignupView extends JFrame {
     private JPanel contentPanel;
@@ -288,160 +284,15 @@ public class RiderSignupView extends JFrame {
         addFormField(formPanel, "Area of Operation:", createAreaField(), 8);
 
         // Submit Button
-        submitButton = new JButton("Submit");
-        submitButton.setBackground(new Color(76, 175, 80));
+        JButton submitButton = new JButton("Submit");
+        submitButton.setBackground(new Color(242, 140, 72));
         submitButton.setForeground(Color.WHITE);
-        submitButton.setFocusPainted(false);
+        submitButton.setFont(new Font("SansSerif", Font.BOLD, 14));
+        submitButton.setMaximumSize(new Dimension(120, 35));  // Slightly smaller button
         submitButton.setBorderPainted(false);
-        submitButton.setPreferredSize(new Dimension(150, 35));
-        submitButton.setMaximumSize(new Dimension(150, 35));
-        submitButton.setAlignmentX(CENTER_ALIGNMENT);
+        submitButton.setFocusPainted(false);
         submitButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        
-        // Add hover effect
-        submitButton.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseEntered(java.awt.event.MouseEvent evt) {
-                submitButton.setBackground(new Color(56, 142, 60));
-            }
-
-            public void mouseExited(java.awt.event.MouseEvent evt) {
-                submitButton.setBackground(new Color(76, 175, 80));
-            }
-        });
-        
-        // Add click listener
-        submitButton.addActionListener(e -> {
-            System.out.println("\n=== Submit Button Clicked ===");
-            
-            // First validate personal info
-            if (!validatePersonalInfo()) {
-                System.out.println("Personal info validation failed");
-                return;
-            }
-            System.out.println("Personal info validation passed");
-            
-            // Then validate vehicle info
-            if (!validateVehicleInfo()) {
-                System.out.println("Vehicle info validation failed");
-                return;
-            }
-            System.out.println("Vehicle info validation passed");
-            
-            try {
-                // Get user details
-                String firstName = firstNameField.getText().trim();
-                String lastName = lastNameField.getText().trim();
-                String mobileNumber = mobileNumberField.getText().trim();
-                String dateOfBirth = dateOfBirthField.getText().trim();
-                String gender = (String) genderComboBox.getSelectedItem();
-                String city = (String) cityComboBox.getSelectedItem();
-                
-                System.out.println("\nUser Details:");
-                System.out.println("First Name: " + firstName);
-                System.out.println("Last Name: " + lastName);
-                System.out.println("Mobile: " + mobileNumber);
-                System.out.println("DOB: " + dateOfBirth);
-                System.out.println("Gender: " + gender);
-                System.out.println("City: " + city);
-                
-                // Create user account first
-                UserDAO userDAO = new UserDAO();
-                boolean userCreated = userDAO.createUser(
-                    firstName,
-                    lastName,
-                    mobileNumber,
-                    "defaultPassword123", // You should implement proper password handling
-                    dateOfBirth,
-                    gender,
-                    "Rider"
-                );
-                
-                if (!userCreated) {
-                    System.out.println("Failed to create user account");
-                    JOptionPane.showMessageDialog(this,
-                        "Error creating user account. Please try again.",
-                        "Error",
-                        JOptionPane.ERROR_MESSAGE);
-                    return;
-                }
-                System.out.println("User account created successfully");
-                
-                // Get the user ID
-                int userId = userDAO.getUserIdByEmailOrMobile(mobileNumber);
-                if (userId == -1) {
-                    System.out.println("Failed to get user ID");
-                    JOptionPane.showMessageDialog(this,
-                        "Error retrieving user account. Please try again.",
-                        "Error",
-                        JOptionPane.ERROR_MESSAGE);
-                    return;
-                }
-                System.out.println("Retrieved user ID: " + userId);
-                
-                // Get vehicle details
-                String brand = (String) brandComboBox.getSelectedItem();
-                String model = (String) modelComboBox.getSelectedItem();
-                String vehicleType = brand + " " + model;
-                String licenseNumber = taxTokenField.getText().trim();
-                String vehicleRegistration = registrationField.getText().trim();
-                
-                System.out.println("\nVehicle Details:");
-                System.out.println("Vehicle Type: " + vehicleType);
-                System.out.println("License Number: " + licenseNumber);
-                System.out.println("Registration: " + vehicleRegistration);
-                
-                // Create rider account
-                RiderDAO riderDAO = new RiderDAO();
-                
-                // Check if license number is already taken
-                if (riderDAO.isLicenseNumberTaken(licenseNumber)) {
-                    System.out.println("License number is already taken");
-                    JOptionPane.showMessageDialog(this,
-                        "This license number is already registered.",
-                        "Error",
-                        JOptionPane.ERROR_MESSAGE);
-                    return;
-                }
-                
-                // Check if vehicle registration is already taken
-                if (riderDAO.isVehicleRegistrationTaken(vehicleRegistration)) {
-                    System.out.println("Vehicle registration is already taken");
-                    JOptionPane.showMessageDialog(this,
-                        "This vehicle registration number is already registered.",
-                        "Error",
-                        JOptionPane.ERROR_MESSAGE);
-                    return;
-                }
-                
-                // Create rider account
-                boolean success = riderDAO.createRider(userId, vehicleType, licenseNumber, vehicleRegistration);
-                
-                if (success) {
-                    System.out.println("Rider account created successfully");
-                    JOptionPane.showMessageDialog(this,
-                        "Rider account created successfully!\nYour account will be activated after verification.",
-                        "Success",
-                        JOptionPane.INFORMATION_MESSAGE);
-                    dispose();
-                } else {
-                    System.out.println("Failed to create rider account");
-                    JOptionPane.showMessageDialog(this,
-                        "Error creating rider account. Please try again.",
-                        "Error",
-                        JOptionPane.ERROR_MESSAGE);
-                }
-                
-            } catch (Exception ex) {
-                System.err.println("Error during rider creation: " + ex.getMessage());
-                ex.printStackTrace();
-                JOptionPane.showMessageDialog(this,
-                    "An error occurred while creating the rider account. Please try again.",
-                    "Error",
-                    JOptionPane.ERROR_MESSAGE);
-            }
-            
-            System.out.println("=== End Submit Button Processing ===\n");
-        });
+        submitButton.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         // Add some spacing before the button
         formPanel.add(Box.createVerticalStrut(15));
@@ -669,8 +520,7 @@ public class RiderSignupView extends JFrame {
         brandPanel.setLayout(new BoxLayout(brandPanel, BoxLayout.Y_AXIS));
         brandPanel.setOpaque(false);
         JLabel brandLabel = new JLabel("Select Brand *");
-        brandLabel.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-        brandComboBox = new JComboBox<>(new String[]{"Select Brand", "NS", "Ntorq", "Bullet"});
+        brandComboBox = new JComboBox<>(new String[]{"Select The Brand", "NS", "Ntorq", "Bullet"});
         styleComboBox(brandComboBox, 150);
         brandPanel.add(brandLabel);
         brandPanel.add(Box.createVerticalStrut(4));
@@ -681,8 +531,7 @@ public class RiderSignupView extends JFrame {
         modelPanel.setLayout(new BoxLayout(modelPanel, BoxLayout.Y_AXIS));
         modelPanel.setOpaque(false);
         JLabel modelLabel = new JLabel("Select Model *");
-        modelLabel.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-        modelComboBox = new JComboBox<>(new String[]{"Select Model", "Bajaj Pulsar NS200", "Royal Enfield Bullet 350", "TVS Ntorq 125"});
+        modelComboBox = new JComboBox<>(new String[]{"Select Your Bike Model", "Bajaj Pulsar NS200", "Royal Enfield Bullet 350", "TVS Ntorq 125"});
         styleComboBox(modelComboBox, 150);
         modelPanel.add(modelLabel);
         modelPanel.add(Box.createVerticalStrut(4));
@@ -696,8 +545,7 @@ public class RiderSignupView extends JFrame {
         regPanel.setLayout(new BoxLayout(regPanel, BoxLayout.Y_AXIS));
         regPanel.setOpaque(false);
         JLabel regLabel = new JLabel("Registration Number *");
-        regLabel.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-        registrationField = createStyledTextField("Enter registration number", 150);
+        registrationField = createStyledTextField("Digits", 150);
         regPanel.add(regLabel);
         regPanel.add(Box.createVerticalStrut(4));
         regPanel.add(registrationField);
@@ -707,7 +555,6 @@ public class RiderSignupView extends JFrame {
         yearPanel.setLayout(new BoxLayout(yearPanel, BoxLayout.Y_AXIS));
         yearPanel.setOpaque(false);
         JLabel yearLabel = new JLabel("Year *");
-        yearLabel.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         String[] years = new String[24];
         years[0] = "Select Year";
         for (int i = 1; i < 24; i++) {
@@ -724,8 +571,7 @@ public class RiderSignupView extends JFrame {
         taxPanel.setLayout(new BoxLayout(taxPanel, BoxLayout.Y_AXIS));
         taxPanel.setOpaque(false);
         JLabel taxLabel = new JLabel("Tax Token Number *");
-        taxLabel.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-        taxTokenField = createStyledTextField("Enter tax token number", 150);
+        taxTokenField = createStyledTextField("Add your Token Number", 150);
         taxPanel.add(taxLabel);
         taxPanel.add(Box.createVerticalStrut(4));
         taxPanel.add(taxTokenField);
@@ -735,8 +581,7 @@ public class RiderSignupView extends JFrame {
         fitnessPanel.setLayout(new BoxLayout(fitnessPanel, BoxLayout.Y_AXIS));
         fitnessPanel.setOpaque(false);
         JLabel fitnessLabel = new JLabel("Fitness Number");
-        fitnessLabel.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-        fitnessNumberField = createStyledTextField("Enter fitness number (optional)", 150);
+        fitnessNumberField = createStyledTextField("Add your Fitness Number", 150);
         fitnessPanel.add(fitnessLabel);
         fitnessPanel.add(Box.createVerticalStrut(4));
         fitnessPanel.add(fitnessNumberField);
@@ -745,24 +590,11 @@ public class RiderSignupView extends JFrame {
         submitButton = new JButton("Submit");
         submitButton.setBackground(new Color(76, 175, 80));
         submitButton.setForeground(Color.WHITE);
-        submitButton.setFont(new Font("Segoe UI", Font.BOLD, 14));
         submitButton.setFocusPainted(false);
         submitButton.setBorderPainted(false);
         submitButton.setPreferredSize(new Dimension(150, 35));
         submitButton.setMaximumSize(new Dimension(150, 35));
         submitButton.setAlignmentX(CENTER_ALIGNMENT);
-        submitButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        
-        // Add hover effect
-        submitButton.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseEntered(java.awt.event.MouseEvent evt) {
-                submitButton.setBackground(new Color(56, 142, 60));
-            }
-
-            public void mouseExited(java.awt.event.MouseEvent evt) {
-                submitButton.setBackground(new Color(76, 175, 80));
-            }
-        });
         
         // Add components to vehicle section
         vehicleSection.add(Box.createVerticalStrut(10));
@@ -831,7 +663,7 @@ public class RiderSignupView extends JFrame {
             
             @Override
             public void focusLost(java.awt.event.FocusEvent evt) {
-                if (field.getText().trim().isEmpty()) {
+                if (field.getText().isEmpty()) {
                     field.setText(placeholder);
                     field.setForeground(Color.GRAY);
                 }
@@ -922,95 +754,69 @@ public class RiderSignupView extends JFrame {
         
         // Add validation to Submit button
         submitButton.addActionListener(e -> {
-            System.out.println("\n=== Submit Button Clicked ===");
             if (validateVehicleInfo()) {
-                System.out.println("Vehicle info validation passed");
-                try {
-                    // Get the user ID from the database using mobile number
-                    UserDAO userDAO = new UserDAO();
-                    String mobileNumber = mobileNumberField.getText().trim();
-                    System.out.println("Looking up user ID for mobile number: " + mobileNumber);
-                    int userId = userDAO.getUserIdByEmailOrMobile(mobileNumber);
-                    
-                    if (userId == -1) {
-                        System.out.println("User ID not found for mobile number: " + mobileNumber);
-                        JOptionPane.showMessageDialog(this,
-                            "Error: Could not find user account. Please try again.",
-                            "Error",
-                            JOptionPane.ERROR_MESSAGE);
-                        return;
-                    }
-                    
-                    System.out.println("Found user ID: " + userId);
-                    
-                    // Create rider entry
-                    RiderDAO riderDAO = new RiderDAO();
-                    
-                    // Check if license number is already taken
-                    String licenseNumber = taxTokenField.getText().trim();
-                    System.out.println("Checking license number: " + licenseNumber);
-                    if (riderDAO.isLicenseNumberTaken(licenseNumber)) {
-                        System.out.println("License number is already taken");
-                        JOptionPane.showMessageDialog(this,
-                            "This license number is already registered.",
-                            "Error",
-                            JOptionPane.ERROR_MESSAGE);
-                        return;
-                    }
-                    
-                    // Check if vehicle registration is already taken
-                    String vehicleRegistration = registrationField.getText().trim();
-                    System.out.println("Checking vehicle registration: " + vehicleRegistration);
-                    if (riderDAO.isVehicleRegistrationTaken(vehicleRegistration)) {
-                        System.out.println("Vehicle registration is already taken");
-                        JOptionPane.showMessageDialog(this,
-                            "This vehicle registration number is already registered.",
-                            "Error",
-                            JOptionPane.ERROR_MESSAGE);
-                        return;
-                    }
-                    
-                    // Get vehicle type (brand + model)
-                    String vehicleType = brandComboBox.getSelectedItem() + " " + modelComboBox.getSelectedItem();
-                    System.out.println("Creating rider with vehicle type: " + vehicleType);
-                    
-                    // Create rider account
-                    boolean success = riderDAO.createRider(userId, vehicleType, licenseNumber, vehicleRegistration);
-                    
-                    if (success) {
-                        System.out.println("Rider account created successfully");
-                        JOptionPane.showMessageDialog(this,
-                            "Rider account created successfully!\nYour account will be activated after verification.",
-                            "Success",
-                            JOptionPane.INFORMATION_MESSAGE);
-                        dispose();
-                    } else {
-                        System.out.println("Failed to create rider account");
-                        JOptionPane.showMessageDialog(this,
-                            "Error creating rider account. Please try again.",
-                            "Error",
-                            JOptionPane.ERROR_MESSAGE);
-                    }
-                } catch (Exception ex) {
-                    System.out.println("Error during rider creation: " + ex.getMessage());
-                    ex.printStackTrace();
+                // Get the user ID from the database using mobile number
+                UserDAO userDAO = new UserDAO();
+                String mobileNumber = mobileNumberField.getText();
+                int userId = userDAO.getUserIdByEmailOrMobile(mobileNumber);
+                
+                if (userId == -1) {
                     JOptionPane.showMessageDialog(this,
-                        "An error occurred while creating the rider account. Please try again.",
+                        "Error: Could not find user account. Please try again.",
+                        "Error",
+                        JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+                
+                // Create rider entry
+                RiderDAO riderDAO = new RiderDAO();
+                
+                // Check if license number is already taken
+                String licenseNumber = taxTokenField.getText();
+                if (riderDAO.isLicenseNumberTaken(licenseNumber)) {
+                    JOptionPane.showMessageDialog(this,
+                        "This license number is already registered.",
+                        "Error",
+                        JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+                
+                // Check if vehicle registration is already taken
+                String vehicleRegistration = registrationField.getText();
+                if (riderDAO.isVehicleRegistrationTaken(vehicleRegistration)) {
+                    JOptionPane.showMessageDialog(this,
+                        "This vehicle registration number is already registered.",
+                        "Error",
+                        JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+                
+                // Get vehicle type (brand + model)
+                String vehicleType = brandComboBox.getSelectedItem() + " " + modelComboBox.getSelectedItem();
+                
+                // Create rider account
+                boolean success = riderDAO.createRider(userId, vehicleType, licenseNumber, vehicleRegistration);
+                
+                if (success) {
+                    JOptionPane.showMessageDialog(this,
+                        "Rider account created successfully!\nYour account will be activated after verification.",
+                        "Success",
+                        JOptionPane.INFORMATION_MESSAGE);
+                    dispose();
+                } else {
+                    JOptionPane.showMessageDialog(this,
+                        "Error creating rider account. Please try again.",
                         "Error",
                         JOptionPane.ERROR_MESSAGE);
                 }
-            } else {
-                System.out.println("Vehicle info validation failed");
             }
-            System.out.println("=== End Submit Button Processing ===\n");
         });
         
         // Add mobile number format validation
         mobileNumberField.addFocusListener(new java.awt.event.FocusAdapter() {
             @Override
             public void focusLost(java.awt.event.FocusEvent evt) {
-                String mobile = mobileNumberField.getText().trim();
-                if (!mobile.equals("977XXXXXXX") && !mobile.isEmpty()) {
+                if (!mobileNumberField.getText().equals("977XXXXXXX")) {
                     validateMobileNumber();
                 }
             }
@@ -1020,8 +826,7 @@ public class RiderSignupView extends JFrame {
         dateOfBirthField.addFocusListener(new java.awt.event.FocusAdapter() {
             @Override
             public void focusLost(java.awt.event.FocusEvent evt) {
-                String date = dateOfBirthField.getText().trim();
-                if (!date.equals("mm/dd/yyyy") && !date.isEmpty()) {
+                if (!dateOfBirthField.getText().equals("mm/dd/yyyy")) {
                     validateDateFormat();
                 }
             }
@@ -1029,183 +834,93 @@ public class RiderSignupView extends JFrame {
     }
     
     private boolean validatePersonalInfo() {
-        System.out.println("\n=== Starting Personal Info Validation ===");
         StringBuilder errors = new StringBuilder("Please correct the following errors:\n");
         boolean isValid = true;
         
-        // Debug print all field values
-        System.out.println("First Name: " + firstNameField.getText());
-        System.out.println("Last Name: " + lastNameField.getText());
-        System.out.println("Mobile Number: " + mobileNumberField.getText());
-        System.out.println("Date of Birth: " + dateOfBirthField.getText());
-        System.out.println("Gender: " + genderComboBox.getSelectedItem());
-        System.out.println("City: " + cityComboBox.getSelectedItem());
-        
         // Validate First Name
-        String firstName = firstNameField.getText().trim();
-        String firstNamePlaceholder = "Enter your first name";
-        if (firstName.isEmpty() || firstName.equals(firstNamePlaceholder)) {
-            System.out.println("First name validation failed: empty or default text");
-            errors.append("- First name is required\n");
-            isValid = false;
-        }
-        
-        // Validate Last Name
-        String lastName = lastNameField.getText().trim();
-        String lastNamePlaceholder = "Enter your last name";
-        if (lastName.isEmpty() || lastName.equals(lastNamePlaceholder)) {
-            System.out.println("Last name validation failed: empty or default text");
-            errors.append("- Last name is required\n");
+        if (firstNameField.getText().isEmpty() || firstNameField.getText().equals("Enter your first name")) {
+            errors.append("- First Name is required\n");
             isValid = false;
         }
         
         // Validate Mobile Number
-        String mobileNumber = mobileNumberField.getText().trim();
-        String mobilePlaceholder = "977XXXXXXX";
-        if (mobileNumber.isEmpty() || mobileNumber.equals(mobilePlaceholder)) {
-            System.out.println("Mobile number validation failed: empty or default text");
-            errors.append("- Mobile number is required\n");
+        if (!validateMobileNumber()) {
+            errors.append("- Invalid mobile number format (should be 977XXXXXXX)\n");
             isValid = false;
-        } else if (!mobileNumber.matches("^977\\d{7}$")) {
-            System.out.println("Mobile number validation failed: invalid format - " + mobileNumber);
-            errors.append("- Mobile number must be in format 977XXXXXXX\n");
-            isValid = false;
-        }
-        
-        // Validate Date of Birth
-        String dob = dateOfBirthField.getText().trim();
-        String dobPlaceholder = "mm/dd/yyyy";
-        if (dob.isEmpty() || dob.equals(dobPlaceholder)) {
-            System.out.println("Date of birth validation failed: empty or default text");
-            errors.append("- Date of birth is required\n");
-            isValid = false;
-        } else {
-            try {
-                SimpleDateFormat sdf = new SimpleDateFormat("MM/dd/yyyy");
-                sdf.setLenient(false);
-                Date birthDate = sdf.parse(dob);
-                Date today = new Date();
-                
-                // Calculate age
-                Calendar birth = Calendar.getInstance();
-                birth.setTime(birthDate);
-                Calendar now = Calendar.getInstance();
-                now.setTime(today);
-                
-                int age = now.get(Calendar.YEAR) - birth.get(Calendar.YEAR);
-                if (now.get(Calendar.DAY_OF_YEAR) < birth.get(Calendar.DAY_OF_YEAR)) {
-                    age--;
-                }
-                
-                if (age < 18) {
-                    System.out.println("Date of birth validation failed: under 18 years old");
-                    errors.append("- You must be at least 18 years old to register\n");
-                    isValid = false;
-                }
-            } catch (ParseException e) {
-                System.out.println("Date of birth validation failed: invalid format - " + dob);
-                errors.append("- Date of birth must be in format mm/dd/yyyy\n");
-                isValid = false;
-            }
         }
         
         // Validate Gender
         if (genderComboBox.getSelectedIndex() == 0) {
-            System.out.println("Gender validation failed: no gender selected");
             errors.append("- Please select your gender\n");
             isValid = false;
         }
         
-        // Validate City
-        if (cityComboBox.getSelectedIndex() == 0) {
-            System.out.println("City validation failed: no city selected");
-            errors.append("- Please select a city\n");
+        // Validate Date of Birth
+        if (!validateDateFormat()) {
+            errors.append("- Invalid date format (should be mm/dd/yyyy)\n");
+            isValid = false;
+        }
+        
+        // Validate Photo Upload
+        if (fileNameLabel.getText().equals("No file chosen")) {
+            errors.append("- Please upload your photo\n");
             isValid = false;
         }
         
         if (!isValid) {
-            System.out.println("Validation errors found: " + errors.toString());
             JOptionPane.showMessageDialog(this,
                 errors.toString(),
                 "Validation Error",
                 JOptionPane.ERROR_MESSAGE);
-        } else {
-            System.out.println("All personal info validation passed");
         }
         
-        System.out.println("=== End Personal Info Validation ===\n");
         return isValid;
     }
     
     private boolean validateVehicleInfo() {
-        System.out.println("\n=== Starting Vehicle Info Validation ===");
         StringBuilder errors = new StringBuilder("Please correct the following errors:\n");
         boolean isValid = true;
         
-        // Debug print all field values
-        System.out.println("Brand: " + brandComboBox.getSelectedItem());
-        System.out.println("Model: " + modelComboBox.getSelectedItem());
-        System.out.println("Registration: " + registrationField.getText());
-        System.out.println("Year: " + yearComboBox.getSelectedItem());
-        System.out.println("Tax Token: " + taxTokenField.getText());
-        
         // Validate Brand
-        String selectedBrand = (String) brandComboBox.getSelectedItem();
-        if (selectedBrand == null || selectedBrand.equals("Select Brand")) {
-            System.out.println("Brand validation failed");
+        if (brandComboBox.getSelectedIndex() == 0) {
             errors.append("- Please select a brand\n");
             isValid = false;
         }
         
         // Validate Model
-        String selectedModel = (String) modelComboBox.getSelectedItem();
-        if (selectedModel == null || selectedModel.equals("Select Model")) {
-            System.out.println("Model validation failed");
+        if (modelComboBox.getSelectedIndex() == 0) {
             errors.append("- Please select a model\n");
             isValid = false;
         }
         
         // Validate Registration Number
-        String registration = registrationField.getText().trim();
-        String regPlaceholder = "Enter registration number";
-        if (registration.isEmpty() || registration.equals(regPlaceholder)) {
-            System.out.println("Registration number validation failed: empty or default text");
+        if (registrationField.getText().isEmpty() || registrationField.getText().equals("Digits")) {
             errors.append("- Registration number is required\n");
             isValid = false;
-        } else if (!registration.matches("^[0-9]+$")) {
-            System.out.println("Registration number validation failed: invalid format - " + registration);
+        } else if (!registrationField.getText().matches("^[0-9]+$")) {
             errors.append("- Registration number should contain only digits\n");
             isValid = false;
         }
         
         // Validate Year
-        String selectedYear = (String) yearComboBox.getSelectedItem();
-        if (selectedYear == null || selectedYear.equals("Select Year")) {
-            System.out.println("Year validation failed");
+        if (yearComboBox.getSelectedIndex() == 0) {
             errors.append("- Please select a year\n");
             isValid = false;
         }
         
         // Validate Tax Token Number
-        String taxToken = taxTokenField.getText().trim();
-        String taxPlaceholder = "Enter tax token number";
-        if (taxToken.isEmpty() || taxToken.equals(taxPlaceholder)) {
-            System.out.println("Tax token validation failed: empty or default text");
+        if (taxTokenField.getText().isEmpty() || taxTokenField.getText().equals("Add your Token Number")) {
             errors.append("- Tax token number is required\n");
             isValid = false;
         }
         
         if (!isValid) {
-            System.out.println("Validation errors found: " + errors.toString());
             JOptionPane.showMessageDialog(this,
                 errors.toString(),
                 "Validation Error",
                 JOptionPane.ERROR_MESSAGE);
-        } else {
-            System.out.println("All vehicle info validation passed");
         }
         
-        System.out.println("=== End Vehicle Info Validation ===\n");
         return isValid;
     }
     
@@ -1271,6 +986,16 @@ public class RiderSignupView extends JFrame {
 
         panel.add(fieldPanel);
         panel.add(Box.createVerticalStrut(spacing));  // Reduced vertical spacing
+    }
+
+    private JTextField createStyledTextField() {
+        JTextField field = new JTextField();
+        field.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        field.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(200, 200, 200)),
+            BorderFactory.createEmptyBorder(5, 8, 5, 8)  // Reduced padding
+        ));
+        return field;
     }
 
     // Helper methods for creating specific fields

@@ -18,20 +18,11 @@ public class RiderDAO {
      * @return true if rider creation was successful, false otherwise
      */
     public boolean createRider(int userId, String vehicleType, String licenseNumber, String vehicleRegistration) {
-        System.out.println("\n=== Creating new rider account ===");
-        System.out.println("User ID: " + userId);
-        System.out.println("Vehicle Type: " + vehicleType);
-        System.out.println("License Number: " + licenseNumber);
-        System.out.println("Vehicle Registration: " + vehicleRegistration);
-        
         String sql = "INSERT INTO riders (user_id, vehicle_type, license_number, vehicle_registration, status) " +
                     "VALUES (?, ?, ?, ?, 'Inactive')";
         
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            
-            System.out.println("Executing SQL query: " + sql);
-            System.out.println("Parameters: [" + userId + ", " + vehicleType + ", " + licenseNumber + ", " + vehicleRegistration + ", 'Inactive']");
             
             pstmt.setInt(1, userId);
             pstmt.setString(2, vehicleType);
@@ -39,22 +30,11 @@ public class RiderDAO {
             pstmt.setString(4, vehicleRegistration);
             
             int rowsAffected = pstmt.executeUpdate();
-            System.out.println("Rows affected: " + rowsAffected);
-            
-            if (rowsAffected > 0) {
-                System.out.println("Rider account created successfully");
-                return true;
-            } else {
-                System.out.println("Failed to create rider account - no rows affected");
-                return false;
-            }
+            return rowsAffected > 0;
             
         } catch (SQLException e) {
-            System.err.println("Database error while creating rider: " + e.getMessage());
             e.printStackTrace();
             return false;
-        } finally {
-            System.out.println("=== End rider creation ===\n");
         }
     }
     

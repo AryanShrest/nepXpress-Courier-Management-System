@@ -184,33 +184,24 @@ public class UserDAO {
      * @return The user ID if found, -1 otherwise
      */
     public int getUserIdByEmailOrMobile(String emailOrMobile) {
-        System.out.println("\n=== Looking up user ID for: " + emailOrMobile + " ===");
         String sql = "SELECT id FROM users WHERE email_or_mobile = ?";
         
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
             
             pstmt.setString(1, emailOrMobile);
-            System.out.println("Executing SQL query: " + sql);
-            System.out.println("With parameter: " + emailOrMobile);
             
             try (ResultSet rs = pstmt.executeQuery()) {
                 if (rs.next()) {
-                    int userId = rs.getInt("id");
-                    System.out.println("Found user ID: " + userId);
-                    return userId;
+                    return rs.getInt("id");
                 }
             }
             
-            System.out.println("No user found with email/mobile: " + emailOrMobile);
             return -1;
             
         } catch (SQLException e) {
-            System.err.println("Database error while looking up user: " + e.getMessage());
             e.printStackTrace();
             return -1;
-        } finally {
-            System.out.println("=== End user ID lookup ===\n");
         }
     }
 } 
