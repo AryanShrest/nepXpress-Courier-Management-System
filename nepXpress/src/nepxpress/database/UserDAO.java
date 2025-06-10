@@ -12,10 +12,8 @@ public class UserDAO {
     
     public boolean createUser(String firstName, String surname, String emailOrMobile, 
                             String password, String dateOfBirth, String gender, String accountType) {
-        String sql = """
-            INSERT INTO users (first_name, surname, email_or_mobile, password, date_of_birth, gender, account_type)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-        """;
+        String sql = "INSERT INTO users (first_name, surname, email_or_mobile, password, date_of_birth, gender, account_type) " +
+                    "VALUES (?, ?, ?, ?, ?, ?, ?)";
         
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -57,11 +55,9 @@ public class UserDAO {
     }
     
     public boolean updateUser(int userId, String firstName, String surname, String emailOrMobile) {
-        String sql = """
-            UPDATE users 
-            SET first_name = ?, surname = ?, email_or_mobile = ?
-            WHERE id = ?
-        """;
+        String sql = "UPDATE users " +
+                    "SET first_name = ?, surname = ?, email_or_mobile = ? " +
+                    "WHERE id = ?";
         
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -180,5 +176,41 @@ public class UserDAO {
         }
         
         return -1; // Return -1 if user not found
+    }
+    
+    /**
+     * Gets the user ID by email or mobile number
+     * @param emailOrMobile The email or mobile number to search for
+     * @return The user ID if found, -1 otherwise
+     */
+    public int getUserIdByEmailOrMobile(String emailOrMobile) {
+        System.out.println("\n=== Looking up user ID for: " + emailOrMobile + " ===");
+        String sql = "SELECT id FROM users WHERE email_or_mobile = ?";
+        
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            
+            pstmt.setString(1, emailOrMobile);
+            System.out.println("Executing SQL query: " + sql);
+            System.out.println("With parameter: " + emailOrMobile);
+            
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    int userId = rs.getInt("id");
+                    System.out.println("Found user ID: " + userId);
+                    return userId;
+                }
+            }
+            
+            System.out.println("No user found with email/mobile: " + emailOrMobile);
+            return -1;
+            
+        } catch (SQLException e) {
+            System.err.println("Database error while looking up user: " + e.getMessage());
+            e.printStackTrace();
+            return -1;
+        } finally {
+            System.out.println("=== End user ID lookup ===\n");
+        }
     }
 } 

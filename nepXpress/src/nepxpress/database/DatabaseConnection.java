@@ -128,14 +128,24 @@ public class DatabaseConnection {
     }
     
     public static Connection getConnection() throws SQLException {
-        if (connection == null || connection.isClosed()) {
-            connection = DriverManager.getConnection(
-                DatabaseConfig.DB_URL,
-                DatabaseConfig.DB_USER,
-                DatabaseConfig.DB_PASSWORD
-            );
+        try {
+            if (connection == null || connection.isClosed()) {
+                System.out.println("Creating new database connection...");
+                connection = DriverManager.getConnection(
+                    DatabaseConfig.DB_URL,
+                    DatabaseConfig.DB_USER,
+                    DatabaseConfig.DB_PASSWORD
+                );
+                System.out.println("Database connection established successfully");
+            }
+            return connection;
+        } catch (SQLException e) {
+            System.err.println("Failed to get database connection: " + e.getMessage());
+            System.err.println("Database URL: " + DatabaseConfig.DB_URL);
+            System.err.println("Database User: " + DatabaseConfig.DB_USER);
+            e.printStackTrace();
+            throw e;
         }
-        return connection;
     }
     
     public static void closeConnection() {
