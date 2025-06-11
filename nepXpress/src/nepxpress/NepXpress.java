@@ -33,6 +33,7 @@ public class NepXpress {
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
                 new Dashboard().setVisible(true);
+                
             }
         });
     }
