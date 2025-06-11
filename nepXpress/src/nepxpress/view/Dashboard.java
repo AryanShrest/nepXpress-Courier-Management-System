@@ -255,18 +255,44 @@ public class Dashboard extends javax.swing.JFrame {
         nepXpressLabel.setText("nepXpress");
         nepXpressLabel.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
 
+        // Add login button
+        JButton loginButton = new JButton("Login");
+        loginButton.setBackground(new java.awt.Color(30, 57, 76));
+        loginButton.setFont(new java.awt.Font("Segoe UI", 1, 12));
+        loginButton.setForeground(new java.awt.Color(255, 255, 255));
+        loginButton.setBorder(javax.swing.BorderFactory.createEmptyBorder(5, 15, 5, 15));
+        loginButton.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        loginButton.setFocusPainted(false);
+
+        // Add action listener to login button
+        loginButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                // TODO: Add login functionality
+                JOptionPane.showMessageDialog(Dashboard.this,
+                    "Login functionality will be implemented soon!",
+                    "Login",
+                    JOptionPane.INFORMATION_MESSAGE);
+            }
+        });
+
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
         jPanel2.setLayout(jPanel2Layout);
         jPanel2Layout.setHorizontalGroup(
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(nepXpressLabel, javax.swing.GroupLayout.DEFAULT_SIZE, 
-                javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addGroup(jPanel2Layout.createSequentialGroup()
+                .addComponent(nepXpressLabel, javax.swing.GroupLayout.DEFAULT_SIZE, 
+                    javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(loginButton)
+                .addGap(20, 20, 20))
         );
         jPanel2Layout.setVerticalGroup(
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel2Layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(nepXpressLabel)
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(nepXpressLabel)
+                    .addComponent(loginButton))
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
