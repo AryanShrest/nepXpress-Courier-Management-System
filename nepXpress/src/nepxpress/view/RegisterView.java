@@ -124,24 +124,6 @@ public class RegisterView extends javax.swing.JFrame {
         }
     }
 
-    private class RoundedTextField extends javax.swing.JTextField {
-        private int radius;
-        public RoundedTextField(int radius) {
-            super();
-            this.radius = radius;
-            setOpaque(false);
-        }
-        @Override
-        protected void paintComponent(java.awt.Graphics g) {
-            java.awt.Graphics2D g2 = (java.awt.Graphics2D) g.create();
-            g2.setRenderingHint(java.awt.RenderingHints.KEY_ANTIALIASING, java.awt.RenderingHints.VALUE_ANTIALIAS_ON);
-            g2.setColor(getBackground());
-            g2.fillRoundRect(0, 0, getWidth(), getHeight(), radius, radius);
-            g2.dispose();
-            super.paintComponent(g);
-        }
-    }
-
     // Store the original login panel layout
     private GroupLayout originalLayout;
     private Component[] loginComponents;
@@ -151,17 +133,10 @@ public class RegisterView extends javax.swing.JFrame {
      */
     public RegisterView() {
         initComponents();
-        // setSize(900, 600); // Comment this out
-        // setLocationRelativeTo(null); // Comment this out
-
-        addWindowListener(new java.awt.event.WindowAdapter() {
-            @Override
-            public void windowOpened(java.awt.event.WindowEvent e) {
-                setExtendedState(javax.swing.JFrame.MAXIMIZED_BOTH);
-            }
-        });
         originalLayout = (GroupLayout) jPanel2.getLayout();
         loginComponents = jPanel2.getComponents();
+        setSize(900, 600);
+        setLocationRelativeTo(null);
         
         // Set white background for panel2
         jPanel2.setBackground(new java.awt.Color(255, 255, 255));
@@ -169,8 +144,8 @@ public class RegisterView extends javax.swing.JFrame {
         // Style password fields with rounded corners
         javax.swing.border.Border emptyBorder = javax.swing.BorderFactory.createEmptyBorder(5, 15, 5, 15);
         
-        jPhoneField.setBorder(emptyBorder);
-        jPhoneField.setBackground(new java.awt.Color(240, 240, 240));
+        jPasswordField1.setBorder(emptyBorder);
+        jPasswordField1.setBackground(new java.awt.Color(240, 240, 240));
         
         jPasswordField2.setBorder(emptyBorder);
         jPasswordField2.setBackground(new java.awt.Color(240, 240, 240));
@@ -193,7 +168,7 @@ public class RegisterView extends javax.swing.JFrame {
         jPanel2 = new RoundedPanel(40);
         jLabel1 = new javax.swing.JLabel();
         jLabel2 = new javax.swing.JLabel();
-        jPhoneField = new RoundedTextField(25);
+        jPasswordField1 = new RoundedPasswordField(25);
         jPasswordField2 = new RoundedPasswordField(25);
         jLabel3 = new javax.swing.JLabel();
         jButton1 = new javax.swing.JButton();
@@ -216,11 +191,6 @@ public class RegisterView extends javax.swing.JFrame {
 
         jLabel2.setFont(new java.awt.Font("Segoe UI", 0, 18));
         jLabel2.setText("Password :");
-
-        jPhoneField.setFont(new java.awt.Font("Segoe UI", 0, 14));
-        jPhoneField.setPreferredSize(new java.awt.Dimension(293, 28));
-        jPhoneField.setBackground(new java.awt.Color(240, 240, 240));
-        jPhoneField.setBorder(javax.swing.BorderFactory.createEmptyBorder(5, 15, 5, 15));
 
         jButton1.setBackground(new java.awt.Color(157, 205, 90));
         jButton1.setFont(new java.awt.Font("Segoe UI", 0, 14));
@@ -319,7 +289,7 @@ public class RegisterView extends javax.swing.JFrame {
                     .addComponent(jLabel3)
                     .addComponent(jLabel2, javax.swing.GroupLayout.PREFERRED_SIZE, 93, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel1)
-                    .addComponent(jPhoneField, javax.swing.GroupLayout.DEFAULT_SIZE, 293, Short.MAX_VALUE)
+                    .addComponent(jPasswordField1, javax.swing.GroupLayout.DEFAULT_SIZE, 293, Short.MAX_VALUE)
                     .addComponent(jPasswordField2))
                 .addContainerGap(37, Short.MAX_VALUE))
             .addGroup(javax.swing.GroupLayout.Alignment.CENTER, jPanel2Layout.createSequentialGroup()
@@ -342,7 +312,7 @@ public class RegisterView extends javax.swing.JFrame {
                 .addGap(35, 35, 35)
                 .addComponent(jLabel1)
                 .addGap(14, 14, 14)
-                .addComponent(jPhoneField, javax.swing.GroupLayout.PREFERRED_SIZE, 28, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(jPasswordField1, javax.swing.GroupLayout.PREFERRED_SIZE, 28, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(jLabel2)
                 .addGap(18, 18, 18)
@@ -400,7 +370,7 @@ public class RegisterView extends javax.swing.JFrame {
     }
 
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {
-        String phoneNumber = jPhoneField.getText().trim();
+        String phoneNumber = jPasswordField1.getText().trim();
         String password = new String(jPasswordField2.getPassword()).trim();
         
         // Validate input
@@ -427,11 +397,6 @@ public class RegisterView extends javax.swing.JFrame {
             
             // Validate login
             if (userDAO.validateLogin(phoneNumber, password)) {
-                int userId = userDAO.getUserIdByMobile(phoneNumber);
-                if (userId == -1) {
-                    JOptionPane.showMessageDialog(this, "User not found.", "Error", JOptionPane.ERROR_MESSAGE);
-                    return;
-                }
                 JOptionPane.showMessageDialog(this,
                     "Login successful!",
                     "Success",
@@ -439,14 +404,15 @@ public class RegisterView extends javax.swing.JFrame {
                 // TODO: Navigate to main application window
                 UserSessionDAO sessionDAO = new UserSessionDAO();
                 String sessionToken = sessionDAO.createSession(
-                    userId,
-                    "127.0.0.1", // or get local IP if needed
-                    System.getProperty("os.name") // or any other info you want
+                    userId,                     // The logged-in user's ID
+                    request.getRemoteAddr(),    // IP address
+                    request.getHeader("User-Agent")  // Browser info
                 );
                 // Store the session token (e.g., in a cookie or local storage)
                 // You can then use this token to validate the user's session on subsequent requests
                 if (sessionDAO.validateSession(sessionToken)) {
                     // User is logged in
+                    int userId = sessionDAO.getUserIdFromSession(sessionToken);
                     // Proceed with authenticated request
                     sessionDAO.invalidateSession(sessionToken);
                     // Clear session token from cookie/storage
@@ -634,7 +600,7 @@ public class RegisterView extends javax.swing.JFrame {
         
         // Add other login components
         jPanel2.add(jLabel1);  // Username label
-        jPanel2.add(jPhoneField);  // Username field
+        jPanel2.add(jPasswordField1);  // Username field
         jPanel2.add(jLabel2);  // Password label
         jPanel2.add(jPasswordField2);  // Password field
         jPanel2.add(jLabel3);  // Forgot password link
@@ -648,7 +614,7 @@ public class RegisterView extends javax.swing.JFrame {
                 .addContainerGap(40, Short.MAX_VALUE)
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jLabel1)
-                    .addComponent(jPhoneField, javax.swing.GroupLayout.PREFERRED_SIZE, 293, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jPasswordField1, javax.swing.GroupLayout.PREFERRED_SIZE, 293, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel2)
                     .addComponent(jPasswordField2, javax.swing.GroupLayout.PREFERRED_SIZE, 293, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel3)
@@ -672,7 +638,7 @@ public class RegisterView extends javax.swing.JFrame {
                 .addGap(35, 35, 35)
                 .addComponent(jLabel1)
                 .addGap(10, 10, 10)
-                .addComponent(jPhoneField, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(jPasswordField1, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(15, 15, 15)
                 .addComponent(jLabel2)
                 .addGap(10, 10, 10)
@@ -976,8 +942,7 @@ public class RegisterView extends javax.swing.JFrame {
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
-                RegisterView view = new RegisterView();
-                view.setVisible(true);
+                new RegisterView().setVisible(true);
             }
         });
     }
@@ -997,6 +962,5 @@ public class RegisterView extends javax.swing.JFrame {
     private javax.swing.JToggleButton jToggleButton1;
     private javax.swing.JToggleButton jToggleButton2;
     private javax.swing.JPanel toggleBgPanel;
-    private javax.swing.JTextField jPhoneField;
     // End of variables declaration//GEN-END:variables
 }
