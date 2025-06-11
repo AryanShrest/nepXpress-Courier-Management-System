@@ -7,9 +7,17 @@ import javax.swing.table.JTableHeader;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.image.BufferedImage;
+
 import java.util.HashMap;
 import java.util.Map;
+
+// Import required panel classes
+import com.courier.ui.DispatchPanel;
+import com.courier.ui.ParcelsFrame;
+import com.courier.ui.TrackParcelsPanel;
+import com.courier.ui.ComplaintsFrame;
+import com.courier.ui.ContactsFrame;
+import com.courier.ui.DeactivateAccountFrame;
 
 /**
  * Dashboardframe.java — NetBeans‑ready Swing UI
@@ -273,7 +281,6 @@ public class DashboardFrame extends JFrame {
         textPan.add(t);
 
         card.add(textPan, BorderLayout.CENTER);
-
         return card;
     }
 
@@ -293,165 +300,6 @@ public class DashboardFrame extends JFrame {
         }
         void setSelected(boolean sel) {
             setBackground(sel ? NAV_SELECTED : NAV_BG);
-        }
-    }
-
-    /* ───────────────── ICON FACTORY ───────────────── */
-    private static class IconFactory {
-        private static final Map<String, ImageIcon> cache = new HashMap<>();
-        static ImageIcon get(String key) {
-            return cache.computeIfAbsent(key, IconFactory::make);
-        }
-        private static ImageIcon make(String key) {
-            switch (key) {
-                case "dashboard":      return drawHouse();
-                case "dispatch":       return drawTruck();
-                case "parcel":         return drawBox();
-                case "search":         return drawMagnifier();
-                case "complaint":      return drawCubeExcl();
-                case "contact":        return drawIdCard();
-                case "flag":           return drawFlag();
-                case "pending":        return drawHourglass();
-                case "delivered":      return drawTruckCheck();
-                case "cancel":         return drawCircleX();
-                case "dispatchList":   return drawClipboard();
-                case "returned":       return drawEnvelopeArrow();
-                default:                return placeholder();
-            }
-        }
-
-        /* Generic placeholder */
-        private static ImageIcon placeholder() {
-            BufferedImage img = new BufferedImage(32,32,BufferedImage.TYPE_INT_ARGB);
-            Graphics2D g = img.createGraphics();
-            g.setColor(Color.LIGHT_GRAY); g.fillRect(0,0,32,32);
-            g.setColor(Color.DARK_GRAY);  g.drawLine(0,0,32,32); g.drawLine(32,0,0,32);
-            g.dispose();
-            return new ImageIcon(img);
-        }
-
-        /* Below: simple programmatic icons (monochrome) */
-        private static ImageIcon drawHouse() {
-            BufferedImage img = new BufferedImage(32,32,BufferedImage.TYPE_INT_ARGB);
-            Graphics2D g = prep(img);
-            g.drawPolygon(new int[]{4,16,28}, new int[]{16,4,16},3); // roof
-            g.drawRect(8,16,16,12);
-            g.dispose();
-            return new ImageIcon(img);
-        }
-        private static ImageIcon drawTruck() {
-            BufferedImage img = new BufferedImage(32,32,BufferedImage.TYPE_INT_ARGB);
-            Graphics2D g = prep(img);
-            g.drawRect(4,12,14,8);
-            g.drawRect(18,16,10,6);
-            g.fillOval(8,22,6,6);
-            g.fillOval(20,22,6,6);
-            g.dispose();
-            return new ImageIcon(img);
-        }
-        private static ImageIcon drawBox() {
-            BufferedImage img = new BufferedImage(32,32,BufferedImage.TYPE_INT_ARGB);
-            Graphics2D g = prep(img);
-            g.drawRect(6,6,20,20);
-            g.drawLine(6,16,26,16);
-            g.drawLine(16,6,16,26);
-            g.dispose();
-            return new ImageIcon(img);
-        }
-        private static ImageIcon drawMagnifier() {
-            BufferedImage img = new BufferedImage(32,32,BufferedImage.TYPE_INT_ARGB);
-            Graphics2D g = prep(img);
-            g.drawOval(4,4,16,16);
-            g.drawLine(16,16,26,26);
-            g.dispose();
-            return new ImageIcon(img);
-        }
-        private static ImageIcon drawCubeExcl() {
-            BufferedImage img = new BufferedImage(32,32,BufferedImage.TYPE_INT_ARGB);
-            Graphics2D g = prep(img);
-            g.drawRect(6,6,20,20);
-            g.drawLine(16,10,16,20);
-            g.fillOval(15,23,2,2);
-            g.dispose();
-            return new ImageIcon(img);
-        }
-        private static ImageIcon drawIdCard() {
-            BufferedImage img = new BufferedImage(32,32,BufferedImage.TYPE_INT_ARGB);
-            Graphics2D g = prep(img);
-            g.drawRect(4,8,24,16);
-            g.drawOval(6,10,8,8);
-            g.drawLine(16,12,26,12);
-            g.drawLine(16,16,26,16);
-            g.dispose();
-            return new ImageIcon(img);
-        }
-        private static ImageIcon drawFlag() {
-            BufferedImage img = new BufferedImage(32,32,BufferedImage.TYPE_INT_ARGB);
-            Graphics2D g = prep(img);
-            g.drawLine(8,6,8,26);
-            g.drawPolyline(new int[]{8,24,14,24}, new int[]{6,8,16,24},4);
-            g.dispose();
-            return new ImageIcon(img);
-        }
-        private static ImageIcon drawHourglass() {
-            BufferedImage img = new BufferedImage(32,32,BufferedImage.TYPE_INT_ARGB);
-            Graphics2D g = prep(img);
-            g.drawRect(8,6,16,4);
-            g.drawRect(8,22,16,4);
-            g.drawLine(8,10,24,22);
-            g.drawLine(24,10,8,22);
-            g.dispose();
-            return new ImageIcon(img);
-        }
-        private static ImageIcon drawTruckCheck() {
-            ImageIcon base = drawTruck();
-            BufferedImage img = new BufferedImage(32,32,BufferedImage.TYPE_INT_ARGB);
-            Graphics2D g = img.createGraphics();
-            g.drawImage(base.getImage(),0,0,null);
-            g.setColor(Color.BLACK);
-            g.drawLine(19,8,23,12);
-            g.drawLine(23,12,28,4);
-            g.dispose();
-            return new ImageIcon(img);
-        }
-        private static ImageIcon drawCircleX() {
-            BufferedImage img = new BufferedImage(32,32,BufferedImage.TYPE_INT_ARGB);
-            Graphics2D g = prep(img);
-            g.drawOval(4,4,24,24);
-            g.drawLine(8,8,24,24);
-            g.drawLine(24,8,8,24);
-            g.dispose();
-            return new ImageIcon(img);
-        }
-        private static ImageIcon drawClipboard() {
-            BufferedImage img = new BufferedImage(32,32,BufferedImage.TYPE_INT_ARGB);
-            Graphics2D g = prep(img);
-            g.drawRect(8,6,16,20);
-            g.drawRect(12,4,8,4);
-            g.drawLine(10,12,22,12);
-            g.drawLine(10,16,22,16);
-            g.drawLine(10,20,22,20);
-            g.dispose();
-            return new ImageIcon(img);
-        }
-        private static ImageIcon drawEnvelopeArrow() {
-            BufferedImage img = new BufferedImage(32,32,BufferedImage.TYPE_INT_ARGB);
-            Graphics2D g = prep(img);
-            g.drawRect(4,8,24,14);
-            g.drawLine(4,8,16,18);
-            g.drawLine(28,8,16,18);
-            g.drawLine(20,22,28,22);
-            g.drawLine(28,22,28,14);
-            g.drawLine(28,14,24,18);
-            g.dispose();
-            return new ImageIcon(img);
-        }
-        private static Graphics2D prep(BufferedImage img) {
-            Graphics2D g = img.createGraphics();
-            g.setColor(Color.BLACK);
-            g.setStroke(new BasicStroke(2));
-            g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-            return g;
         }
     }
 
