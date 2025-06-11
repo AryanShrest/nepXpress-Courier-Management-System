@@ -111,8 +111,8 @@ public class SignupView extends javax.swing.JFrame {
         
         // Sign up button
         signUpButton = new JButton("Sign Up");
-        signUpButton.setBackground(new Color(157, 205, 90));
-        signUpButton.setForeground(Color.BLACK);
+        signUpButton.setBackground(new Color(0, 164, 0));
+        signUpButton.setForeground(Color.WHITE);
         signUpButton.setFocusPainted(false);
         signUpButton.setPreferredSize(new Dimension(293, 35));  // Set specific width to match other fields
         
@@ -568,23 +568,12 @@ public class SignupView extends javax.swing.JFrame {
                     "Email/Mobile: " + emailOrMobile + "\n" +
                     "Date of Birth: " + dob + "\n" +
                     "Gender: " + gender + "\n" +
-                    "Account Type: " + accountType + "\n\n" +
-                    "Please login with your credentials.",
+                    "Account Type: " + accountType,
                     "Success",
                     JOptionPane.INFORMATION_MESSAGE);
                 
                 // If rider account, keep the window open as RiderSignupView will handle the rest
                 if (accountType.equals("User")) {
-                    // Return to login screen
-                    Container parent = mainPanel;
-                    while (parent != null) {
-                        if (parent.getParent() instanceof RegisterView) {
-                            RegisterView registerView = (RegisterView) parent.getParent();
-                            registerView.switchToLogin();
-                            return;
-                        }
-                        parent = parent.getParent();
-                    }
                     dispose();
                 }
             } else {
