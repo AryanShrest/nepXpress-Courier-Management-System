@@ -4,8 +4,12 @@
  */
 package nepxpress;
 
-import nepxpress.view.Dashboard;
+ ShresthaAryan
+import nepxpress.view.RegisterView;
+import javax.imageio.stream.ImageInputStream;
+
 import javax.swing.SwingUtilities;
+ master
 
 /**
  *
@@ -33,7 +37,6 @@ public class NepXpress {
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
                 new Dashboard().setVisible(true);
-                
             }
         });
     }
