@@ -27,11 +27,7 @@ public class EmailTest {
             System.out.println("The code sent was: " + verificationCode);
         } else {
             System.out.println("\nFailed to send email. Please check:");
-            System.out.println("1. Email credentials in EmailService.java are set correctly");
-            System.out.println("2. Using correct Gmail app password (not regular Gmail password)");
-            System.out.println("3. Internet connection is working");
-            System.out.println("4. Check console for detailed error messages");
-        }
+           
         
         scanner.close();
     }
