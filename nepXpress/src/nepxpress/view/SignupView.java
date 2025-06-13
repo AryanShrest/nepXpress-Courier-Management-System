@@ -286,7 +286,6 @@ public class SignupView extends javax.swing.JFrame {
             return createZeroButton();
         }
 
-        
         private JButton createZeroButton() {
             JButton button = new JButton();
             button.setPreferredSize(new Dimension(0, 0));

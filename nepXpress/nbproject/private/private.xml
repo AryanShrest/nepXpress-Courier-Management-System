@@ -20,6 +20,14 @@
             <file>file:/C:/nepXpress%20-%20Management/nepXpress/src/nepxpress/view/Untitled_design__1_-removebg-preview.ico</file>
             <file>file:/C:/nepXpress%20-%20Management/nepXpress/src/nepxpress/util/EmailUtil.java</file>
             <file>file:/C:/nepXpress%20-%20Management/nepXpress/src/nepxpress/test/EmailTest.java</file>
+            <file>file:/C:/nepXpress%20-%20Management/nepXpress/test/nepxpress/dao/UserDaoTest.java</file>
+            <file>file:/C:/nepXpress%20-%20Management/nepXpress/src/nepxpress/database/UserSessionDAO.java</file>
+            <file>file:/C:/nepXpress%20-%20Management/nepXpress/src/nepxpress/database/RiderDAO.java</file>
+            <file>file:/C:/nepXpress%20-%20Management/nepXpress/src/nepxpress/controller/RegisterController.java</file>
+            <file>file:/C:/nepXpress%20-%20Management/nepXpress/src/nepxpress/database/UserDAO.java</file>
+            <file>file:/C:/nepXpress%20-%20Management/nepXpress/src/nepxpress/database/RiderInfo.java</file>
+            <file>file:/C:/nepXpress%20-%20Management/nepXpress/src/nepxpress/database/MySqlConnection.java</file>
+            <file>file:/C:/nepXpress%20-%20Management/nepXpress/src/nepxpress/database/DatabaseConnection.java</file>
         </group>
     </open-files>
 </project-private>
