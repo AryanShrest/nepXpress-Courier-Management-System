@@ -44,16 +44,3 @@ public class UserDaoTest {
     
 }
 
-public class UserDaoTest {
-    String correctEmail="testt@gmail.com";
-    String correctName="Testt user";
-    String password="passwordfortestt";
-    UserDao dao=new UserDao();
-    
-    public void registerWidthNewDetails(){
-        UserData user = new UserData(correctName,correctEmail,password);
-        boolean result=dao.register(user);
-        Assert.assertTrue("Register should work with unique details",result);
-        
-    }
-}
