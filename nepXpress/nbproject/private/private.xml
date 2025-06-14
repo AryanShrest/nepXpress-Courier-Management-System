@@ -8,13 +8,8 @@
             <file>file:/C:/nepXpress%20-%20Management/nepXpress/src/nepxpress/dao/UserDao.java</file>
             <file>file:/C:/nepXpress%20-%20Management/nepXpress/src/nepxpress/view/ForgotPasswordView.java</file>
             <file>file:/C:/nepXpress%20-%20Management/nepXpress/src/nepxpress/util/EmailService.java</file>
-            <file>file:/C:/nepXpress%20-%20Management/nepXpress/src/nepxpress/view/MyDeliveries.java</file>
             <file>file:/C:/nepXpress%20-%20Management/nepXpress/src/nepxpress/database/PasswordResetDAO.java</file>
             <file>file:/C:/nepXpress%20-%20Management/nepXpress/src/nepxpress/view/RegisterView.java</file>
-            <file>file:/C:/nepXpress%20-%20Management/nepXpress/src/nepxpress/view/Pickup.java</file>
-            <file>file:/C:/nepXpress%20-%20Management/nepXpress/src/nepxpress/view/Summary.java</file>
-            <file>file:/C:/nepXpress%20-%20Management/nepXpress/src/nepxpress/view/Report.java</file>
-            <file>file:/C:/nepXpress%20-%20Management/nepXpress/src/nepxpress/view/CashCollected.java</file>
             <file>file:/C:/nepXpress%20-%20Management/nepXpress/src/nepxpress/view/RiderSignupView.java</file>
             <file>file:/C:/nepXpress%20-%20Management/nepXpress/src/nepxpress/view/Screenshot%202025-05-27%20184033.png</file>
             <file>file:/C:/nepXpress%20-%20Management/nepXpress/src/nepxpress/view/Untitled_design__1_-removebg-preview.ico</file>
@@ -28,6 +23,8 @@
             <file>file:/C:/nepXpress%20-%20Management/nepXpress/src/nepxpress/database/RiderInfo.java</file>
             <file>file:/C:/nepXpress%20-%20Management/nepXpress/src/nepxpress/database/MySqlConnection.java</file>
             <file>file:/C:/nepXpress%20-%20Management/nepXpress/src/nepxpress/database/DatabaseConnection.java</file>
+            <file>file:/C:/nepXpress%20-%20Management/nepXpress/src/nepxpress/database/DatabaseConfig.java</file>
+            <file>file:/C:/nepXpress%20-%20Management/nepXpress/src/nepxpress/database/DatabaseTest.java</file>
         </group>
     </open-files>
 </project-private>
