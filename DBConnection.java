@@ -17,8 +17,8 @@ import java.sql.SQLException;
 
 public class DBConnection {
     private static final String URL = "jdbc:mysql://localhost:3306/riderdashboard";
-    private static final String USER = "rizz"; // Change to your MySQL username
-    private static final String PASSWORD = "Richard0.2"; // Change to your MySQL password
+    private static final String USER = "root"; // Change to your MySQL username
+    private static final String PASSWORD = "97012"; // Change to your MySQL password
 
     public static Connection getConnection() throws SQLException {
         return DriverManager.getConnection(URL, USER, PASSWORD);
