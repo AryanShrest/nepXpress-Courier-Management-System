@@ -211,29 +211,19 @@ public class RiderDashboard extends JFrame {
         panel.add(title, BorderLayout.NORTH);
 
         String[] columns = {"Parcel ID", "Customer Name", "Address", "Status", "Actions"};
-        DefaultTableModel model = new DefaultTableModel(columns, 0) {
+        Object[][] data = {
+            {"P001", "John Doe", "New Road, KTM", "Pending", ""},
+            {"P002", "Jane Smith", "Kupondole, KTM", "Delivered", ""},
+            {"P003", "Alice Brown", "Durbar Marg, KTM", "Failed", ""},
+            {"P004", "Bob White", "Sundhara, KTM", "Pending", ""},
+            {"P005", "Charlie Black", "Kalimati, KTM", "Delivered", ""}
+        };
+        DefaultTableModel model = new DefaultTableModel(data, columns) {
             @Override
             public boolean isCellEditable(int row, int column) {
                 return column == getColumnCount() - 1;
             }
         };
-
-        // --- Load data from database ---
-        try (Connection conn = DBConnection.getConnection();
-             Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery("SELECT parcel_id, customer_name, address, status FROM deliveries")) {
-
-            while (rs.next()) {
-                String parcelId = rs.getString("parcel_id");
-                String customerName = rs.getString("customer_name");
-                String address = rs.getString("address");
-                String status = rs.getString("status");
-                model.addRow(new Object[]{parcelId, customerName, address, status, ""});
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            JOptionPane.showMessageDialog(panel, "Error loading deliveries from database:\n" + e.getMessage(), "Database Error", JOptionPane.ERROR_MESSAGE);
-        }
 
         JTable table = new HoverTable(model);
         table.setRowHeight(40);
@@ -265,11 +255,14 @@ public class RiderDashboard extends JFrame {
         ));
         searchField.setBackground(Color.WHITE);
         JButton searchButton = new JButton("Search");
-        searchButton.setFont(new Font("Arial", Font.BOLD, 13));
-        searchButton.setBackground(secondaryColor);
+        searchButton.setFont(new Font("Arial", Font.BOLD, 16));
+        searchButton.setBackground(new Color(0, 123, 255)); // Vibrant blue
         searchButton.setForeground(Color.WHITE);
         searchButton.setFocusPainted(false);
-        searchButton.setBorder(BorderFactory.createEmptyBorder(6, 18, 6, 18));
+        searchButton.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(0, 80, 180), 2, true),
+            BorderFactory.createEmptyBorder(10, 28, 10, 28)
+        ));
         searchButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
         searchBarPanel.add(searchField);
         searchBarPanel.add(Box.createHorizontalStrut(8));
@@ -348,11 +341,14 @@ public class RiderDashboard extends JFrame {
         ));
         searchField.setBackground(Color.WHITE);
         JButton searchButton = new JButton("Search");
-        searchButton.setFont(new Font("Arial", Font.BOLD, 13));
-        searchButton.setBackground(secondaryColor);
+        searchButton.setFont(new Font("Arial", Font.BOLD, 16));
+        searchButton.setBackground(new Color(0, 123, 255)); // Vibrant blue
         searchButton.setForeground(Color.WHITE);
         searchButton.setFocusPainted(false);
-        searchButton.setBorder(BorderFactory.createEmptyBorder(6, 18, 6, 18));
+        searchButton.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(0, 80, 180), 2, true),
+            BorderFactory.createEmptyBorder(10, 28, 10, 28)
+        ));
         searchButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
         searchBarPanel.add(searchField);
         searchBarPanel.add(Box.createHorizontalStrut(8));
@@ -433,11 +429,14 @@ public class RiderDashboard extends JFrame {
         ));
         searchField.setBackground(Color.WHITE);
         JButton searchButton = new JButton("Search");
-        searchButton.setFont(new Font("Arial", Font.BOLD, 13));
-        searchButton.setBackground(secondaryColor);
+        searchButton.setFont(new Font("Arial", Font.BOLD, 16));
+        searchButton.setBackground(new Color(0, 123, 255)); // Vibrant blue
         searchButton.setForeground(Color.WHITE);
         searchButton.setFocusPainted(false);
-        searchButton.setBorder(BorderFactory.createEmptyBorder(6, 18, 6, 18));
+        searchButton.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(0, 80, 180), 2, true),
+            BorderFactory.createEmptyBorder(10, 28, 10, 28)
+        ));
         searchButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
         searchBarPanel.add(searchField);
         searchBarPanel.add(Box.createHorizontalStrut(8));
@@ -937,19 +936,6 @@ public class RiderDashboard extends JFrame {
 
     // Example method to fetch deliveries from the database
     public void fetchDeliveriesFromDB() {
-        try (Connection conn = DBConnection.getConnection();
-             Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery("SELECT * FROM deliveries")) {
-
-            while (rs.next()) {
-                String parcelId = rs.getString("parcel_id");
-                String customerName = rs.getString("customer_name");
-                String address = rs.getString("address");
-                String status = rs.getString("status");
-                // Add this data to your table model or UI
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        // Database code removed. This method is now a placeholder.
     }
 }
