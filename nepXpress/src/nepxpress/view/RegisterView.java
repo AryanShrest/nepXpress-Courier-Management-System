@@ -432,24 +432,29 @@ public class RegisterView extends javax.swing.JFrame {
                     JOptionPane.showMessageDialog(this, "User not found.", "Error", JOptionPane.ERROR_MESSAGE);
                     return;
                 }
-                JOptionPane.showMessageDialog(this,
-                    "Login successful!",
-                    "Success",
-                    JOptionPane.INFORMATION_MESSAGE);
-                // TODO: Navigate to main application window
+                
+                // Get user type
+                String accountType = userDAO.getUserAccountType(userId);
+                
+                // Create session
                 UserSessionDAO sessionDAO = new UserSessionDAO();
                 String sessionToken = sessionDAO.createSession(
                     userId,
                     "127.0.0.1", // or get local IP if needed
                     System.getProperty("os.name") // or any other info you want
                 );
-                // Store the session token (e.g., in a cookie or local storage)
-                // You can then use this token to validate the user's session on subsequent requests
+                
                 if (sessionDAO.validateSession(sessionToken)) {
                     // User is logged in
-                    // Proceed with authenticated request
-                    sessionDAO.invalidateSession(sessionToken);
-                    // Clear session token from cookie/storage
+                    if (accountType.equals("Rider")) {
+                        // Open rider dashboard
+                        RiderDashboard riderDashboard = new RiderDashboard(String.valueOf(userId));
+                        riderDashboard.setVisible(true);
+                    } else {
+                        // Open general user dashboard
+                        DashboardFrame dashboardFrame = new DashboardFrame(String.valueOf(userId));
+                        dashboardFrame.setVisible(true);
+                    }
                     dispose();
                 } else {
                     // Session is invalid or expired

@@ -204,4 +204,26 @@ public class UserDAO {
             return -1;
         }
     }
+    
+    public String getUserAccountType(int userId) {
+        String sql = "SELECT account_type FROM users WHERE id = ?";
+        
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            
+            pstmt.setInt(1, userId);
+            
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getString("account_type");
+                }
+            }
+            
+            return null;
+            
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
 } 
