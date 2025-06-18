@@ -18,13 +18,15 @@ public class ContactsFrame extends JFrame {
     private JTextField emailField;
     private JTextArea messageArea;
     private JButton contactUsButton;
-    private JButton getDirectionButton;
 
     /**
      * Creates new form java
      */
     public ContactsFrame() {
-        initComponents();
+        setTitle("nepXpress — Contact");
+        setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+        setSize(1280, 720);
+        setLocationRelativeTo(null);
         setupUI();
     }
 
@@ -48,24 +50,18 @@ public class ContactsFrame extends JFrame {
         JPanel headerPanel = new JPanel();
         headerPanel.setLayout(new BoxLayout(headerPanel, BoxLayout.Y_AXIS));
         headerPanel.setBackground(Color.WHITE);
-        headerPanel.setBorder(new EmptyBorder(16,25,16,25));
+        headerPanel.setBorder(new EmptyBorder(16, 25, 16, 25));
 
         JLabel contactsTitle = new JLabel("Contact");
         contactsTitle.setFont(new Font("SansSerif", Font.BOLD, 24));
         contactsTitle.setAlignmentX(Component.LEFT_ALIGNMENT);
         headerPanel.add(contactsTitle);
         
-        JSeparator line1 = new JSeparator();
-        line1.setMaximumSize(new Dimension(Integer.MAX_VALUE, 1));
-        line1.setForeground(new Color(200, 200, 200));
+        JSeparator separator = new JSeparator();
+        separator.setMaximumSize(new Dimension(Integer.MAX_VALUE, 1));
+        separator.setForeground(new Color(200, 200, 200));
         headerPanel.add(Box.createVerticalStrut(8));
-        headerPanel.add(line1);
-        
-        JSeparator line2 = new JSeparator();
-        line2.setMaximumSize(new Dimension(Integer.MAX_VALUE, 1));
-        line2.setForeground(new Color(200, 200, 200));
-        headerPanel.add(Box.createVerticalStrut(2));
-        headerPanel.add(line2);
+        headerPanel.add(separator);
 
         mainPanel.add(headerPanel, BorderLayout.NORTH);
 
@@ -92,26 +88,14 @@ public class ContactsFrame extends JFrame {
         addressTitle.setAlignmentX(Component.LEFT_ALIGNMENT);
         contactInfoPanel.add(addressTitle);
 
-        JLabel addressLine1 = new JLabel("Sundarbasti,Budhanilkantha-8");
-        JLabel addressLine2 = new JLabel("Kathmandu,Nepal");
+        JLabel addressLine1 = new JLabel("Sundarbasti, Budhanilkantha-8");
+        JLabel addressLine2 = new JLabel("Kathmandu, Nepal");
         addressLine1.setForeground(Color.GRAY);
         addressLine2.setForeground(Color.GRAY);
         addressLine1.setAlignmentX(Component.LEFT_ALIGNMENT);
         addressLine2.setAlignmentX(Component.LEFT_ALIGNMENT);
         contactInfoPanel.add(addressLine1);
         contactInfoPanel.add(addressLine2);
-        
-        // Get Direction Button
-        getDirectionButton = new JButton("Get Direction");
-        getDirectionButton.setForeground(new Color(242, 140, 72)); // Orange color
-        getDirectionButton.setBackground(Color.WHITE);
-        getDirectionButton.setBorder(BorderFactory.createLineBorder(new Color(242, 140, 72), 1));
-        getDirectionButton.setFont(new Font("SansSerif", Font.PLAIN, 14));
-        getDirectionButton.setMaximumSize(new Dimension(120, 35));
-        getDirectionButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        getDirectionButton.setAlignmentX(Component.LEFT_ALIGNMENT);
-        contactInfoPanel.add(Box.createVerticalStrut(10));
-        contactInfoPanel.add(getDirectionButton);
         contactInfoPanel.add(Box.createVerticalStrut(20));
 
         // Phone Section
@@ -186,7 +170,6 @@ public class ContactsFrame extends JFrame {
         contactUsButton.setMaximumSize(new Dimension(120, 40));
         contactUsButton.setBorderPainted(false);
         contactUsButton.setFocusPainted(false);
-        contactUsButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
         // Add components to form panel
         contactFormPanel.add(fullNameField);
@@ -201,16 +184,15 @@ public class ContactsFrame extends JFrame {
         contactFormPanel.add(Box.createVerticalStrut(20));
         contactFormPanel.add(contactUsButton);
 
-        // Add both panels to content panel
+        // Add panels to content panel
         contentPanel.add(contactInfoPanel);
         contentPanel.add(contactFormPanel);
 
         mainPanel.add(contentPanel, BorderLayout.CENTER);
         setContentPane(mainPanel);
 
-        // Add action listeners
+        // Add action listener for contact button
         contactUsButton.addActionListener(e -> handleContactSubmit());
-        getDirectionButton.addActionListener(e -> handleGetDirection());
     }
 
     private JTextField createFormField(String placeholder) {
@@ -222,38 +204,78 @@ public class ContactsFrame extends JFrame {
             BorderFactory.createEmptyBorder(10, 10, 10, 10)
         ));
         field.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
+
+        field.addFocusListener(new java.awt.event.FocusAdapter() {
+            public void focusGained(java.awt.event.FocusEvent evt) {
+                if (field.getText().equals(placeholder)) {
+                    field.setText("");
+                    field.setForeground(Color.BLACK);
+                }
+            }
+
+            public void focusLost(java.awt.event.FocusEvent evt) {
+                if (field.getText().isEmpty()) {
+                    field.setText(placeholder);
+                    field.setForeground(Color.GRAY);
+                }
+            }
+        });
+
         return field;
     }
 
     private void handleContactSubmit() {
-        String name = fullNameField.getText();
-        String mobile = mobileNumberField.getText();
-        String email = emailField.getText();
-        String message = messageArea.getText();
+        String fullName = fullNameField.getText().trim();
+        String mobileNumber = mobileNumberField.getText().trim();
+        String email = emailField.getText().trim();
+        String message = messageArea.getText().trim();
 
-        if (name.isEmpty() || name.equals("Full Name*") ||
-            mobile.isEmpty() || mobile.equals("Mobile Number*") ||
+        // Validate input
+        if (fullName.isEmpty() || fullName.equals("Full Name*") ||
+            mobileNumber.isEmpty() || mobileNumber.equals("Mobile Number*") ||
             email.isEmpty() || email.equals("Email*") ||
             message.isEmpty() || message.equals("Message*")) {
+            
             JOptionPane.showMessageDialog(this,
                 "Please fill in all required fields",
                 "Error",
                 JOptionPane.WARNING_MESSAGE);
-        } else {
-            JOptionPane.showMessageDialog(this,
-                "Message sent successfully!",
-                "Success",
-                JOptionPane.INFORMATION_MESSAGE);
-            clearForm();
+            return;
         }
-    }
 
-    private void handleGetDirection() {
-        // Here you would implement the map/direction functionality
+        // Validate email format
+        if (!email.matches("^[A-Za-z0-9+_.-]+@(.+)$")) {
+            JOptionPane.showMessageDialog(this,
+                "Please enter a valid email address",
+                "Error",
+                JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        // Validate mobile number format
+        if (!mobileNumber.matches("\\d{10}")) {
+            JOptionPane.showMessageDialog(this,
+                "Please enter a valid 10-digit mobile number",
+                "Error",
+                JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        // Validate message length
+        if (message.length() > 250) {
+            JOptionPane.showMessageDialog(this,
+                "Message cannot exceed 250 characters",
+                "Error",
+                JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        // TODO: Send message to server
         JOptionPane.showMessageDialog(this,
-            "Opening map directions...",
-            "Get Direction",
+            "Thank you for your message. We will get back to you soon!",
+            "Success",
             JOptionPane.INFORMATION_MESSAGE);
+        clearForm();
     }
 
     private void clearForm() {
@@ -274,35 +296,15 @@ public class ContactsFrame extends JFrame {
     /**
      * @param args the command line arguments
      */
-    public static void main(String args[]) {
-        /* Set the Nimbus look and feel */
-        //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
-        /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
-         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
-         */
+    public static void main(String[] args) {
         try {
-            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
-                if ("Nimbus".equals(info.getName())) {
-                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
-                    break;
-                }
-            }
-        } catch (ClassNotFoundException ex) {
-            java.util.logging.Logger.getLogger(ContactsFrame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (InstantiationException ex) {
-            java.util.logging.Logger.getLogger(ContactsFrame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (IllegalAccessException ex) {
-            java.util.logging.Logger.getLogger(ContactsFrame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (javax.swing.UnsupportedLookAndFeelException ex) {
-            java.util.logging.Logger.getLogger(ContactsFrame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-        //</editor-fold>
 
-        /* Create and display the form */
-        java.awt.EventQueue.invokeLater(new Runnable() {
-            public void run() {
-                new ContactsFrame().setVisible(true);
-            }
+        EventQueue.invokeLater(() -> {
+            new ContactsFrame().setVisible(true);
         });
     }
 
