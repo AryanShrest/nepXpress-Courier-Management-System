@@ -6,6 +6,7 @@ import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
+import java.sql.*;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -43,6 +44,7 @@ public class DashboardFrame extends JFrame {
     private final CardLayout cardLayout = new CardLayout();
     private final JPanel     mainView   = new JPanel(cardLayout);
     private final Map<String, NavItem> navButtons = new HashMap<>();
+    private Connection conn;
 
     /* ─────  CONSTRUCTOR  ───── */
     public DashboardFrame() {
@@ -57,6 +59,73 @@ public class DashboardFrame extends JFrame {
         add(createMainView(),BorderLayout.CENTER);
 
         selectView("Dashboard"); // default selection
+        loadDashboardData();
+    }
+
+    private void loadDashboardData() {
+        try {
+            conn = DatabaseConnection.getConnection();
+            if (conn != null) {
+                // Update dashboard cards with real data
+                updateOrderCounts();
+            }
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(this,
+                "Error loading dashboard data: " + e.getMessage(),
+                "Database Error",
+                JOptionPane.ERROR_MESSAGE);
+        } finally {
+            DatabaseConnection.closeConnection(conn);
+        }
+    }
+
+    private void updateOrderCounts() throws SQLException {
+        // Get counts for each status
+        String query = "SELECT status, COUNT(*) as count FROM parcels GROUP BY status";
+        try (PreparedStatement pstmt = conn.prepareStatement(query);
+             ResultSet rs = pstmt.executeQuery()) {
+            
+            Map<String, Integer> counts = new HashMap<>();
+            while (rs.next()) {
+                counts.put(rs.getString("status"), rs.getInt("count"));
+            }
+
+            // Update the dashboard cards
+            updateCard("Booked Orders", counts.getOrDefault("pending", 0));
+            updateCard("Pending Orders", counts.getOrDefault("in_transit", 0));
+            updateCard("Delivered", counts.getOrDefault("delivered", 0));
+            updateCard("Cancelled Orders", counts.getOrDefault("cancelled", 0));
+        }
+    }
+
+    private void updateCard(String cardName, int count) {
+        // Find the card and update its count
+        for (Component comp : mainView.getComponents()) {
+            if (comp instanceof JPanel) {
+                JPanel panel = (JPanel) comp;
+                for (Component card : panel.getComponents()) {
+                    if (card instanceof JPanel) {
+                        JPanel cardPanel = (JPanel) card;
+                        for (Component c : cardPanel.getComponents()) {
+                            if (c instanceof JPanel) {
+                                JPanel textPanel = (JPanel) c;
+                                for (Component label : textPanel.getComponents()) {
+                                    if (label instanceof JLabel) {
+                                        JLabel lbl = (JLabel) label;
+                                        if (lbl.getText().equals(cardName)) {
+                                            // Update the count label
+                                            JLabel countLabel = (JLabel) textPanel.getComponent(0);
+                                            countLabel.setText(String.valueOf(count));
+                                            return;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 
     /* ───────────────── HEADER ───────────────── */
@@ -64,11 +133,36 @@ public class DashboardFrame extends JFrame {
         JPanel header = new JPanel(new BorderLayout());
         header.setBackground(HEADER_BG);
         header.setBorder(new EmptyBorder(8,0,8,0));
+        
         JLabel title = new JLabel("nepXpress", SwingConstants.CENTER);
         title.setForeground(Color.WHITE);
         title.setFont(TITLE_FONT);
+        
+        JPanel rightPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        rightPanel.setBackground(HEADER_BG);
+        JButton logoutBtn = new JButton("Logout");
+        logoutBtn.setForeground(Color.WHITE);
+        logoutBtn.setBackground(NAV_SELECTED);
+        logoutBtn.setBorderPainted(false);
+        logoutBtn.setFocusPainted(false);
+        logoutBtn.addActionListener(e -> handleLogout());
+        rightPanel.add(logoutBtn);
+        
         header.add(title, BorderLayout.CENTER);
+        header.add(rightPanel, BorderLayout.EAST);
         return header;
+    }
+
+    private void handleLogout() {
+        int choice = JOptionPane.showConfirmDialog(this,
+            "Are you sure you want to logout?",
+            "Confirm Logout",
+            JOptionPane.YES_NO_OPTION);
+            
+        if (choice == JOptionPane.YES_OPTION) {
+            dispose();
+            // TODO: Show login frame
+        }
     }
 
     /* ───────────────── SIDEBAR  ───────────────── */
@@ -121,11 +215,11 @@ public class DashboardFrame extends JFrame {
 
         // placeholder content panels for other views
         mainView.add(dashboardPanel, "Dashboard");
-        mainView.add(placeholder("Dispatch"),  "Dispatch");
-        mainView.add(placeholder("Parcels"),   "Parcels");
-        mainView.add(placeholder("Track Parcels"), "Track Parcels");
-        mainView.add(placeholder("Complaints"),"Complaints");
-        mainView.add(placeholder("Contact"),   "Contact");
+        mainView.add(new DispatchFrame(), "Dispatch");
+        mainView.add(new ParcelsFrame(), "Parcels");
+        mainView.add(new TrackParcelsFrame(), "Track Parcels");
+        mainView.add(new ComplaintsFrame(), "Complaints");
+        mainView.add(new ContactsFrame(), "Contact");
         return mainView;
     }
 
@@ -369,6 +463,14 @@ public class DashboardFrame extends JFrame {
 
     /* ─────────────────── MAIN ─────────────────── */
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> new DashboardFrame().setVisible(true));
+        try {
+            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        EventQueue.invokeLater(() -> {
+            new DashboardFrame().setVisible(true);
+        });
     }
 }
