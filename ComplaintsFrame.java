@@ -7,6 +7,8 @@ package com.courier.ui;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
+import java.sql.*;
+import java.util.regex.Pattern;
 
 /**
  *
@@ -17,6 +19,7 @@ public class ComplaintsFrame extends JFrame {
     private JTextField natureField;
     private JTextArea descriptionArea;
     private JButton submitButton;
+    private Connection conn;
 
     /**
      * Creates new form Java
@@ -143,25 +146,79 @@ public class ComplaintsFrame extends JFrame {
         setContentPane(mainPanel);
 
         // Add action listener for submit button
-        submitButton.addActionListener(e -> {
-            String parcelNumber = parcelNumberField.getText();
-            String nature = natureField.getText();
-            String description = descriptionArea.getText();
-            
-            if (parcelNumber.isEmpty() || nature.isEmpty() || description.isEmpty() || 
-                description.equals("Describe Your Issue")) {
-                JOptionPane.showMessageDialog(this,
-                    "Please fill in all fields",
-                    "Error",
-                    JOptionPane.WARNING_MESSAGE);
-            } else {
-                JOptionPane.showMessageDialog(this,
-                    "Complaint submitted successfully!",
-                    "Success",
-                    JOptionPane.INFORMATION_MESSAGE);
-                clearForm();
+        submitButton.addActionListener(e -> handleSubmit());
+    }
+
+    private void handleSubmit() {
+        String parcelNumber = parcelNumberField.getText().trim();
+        String nature = natureField.getText().trim();
+        String description = descriptionArea.getText().trim();
+        
+        // Validate input
+        if (parcelNumber.isEmpty() || parcelNumber.equals("Enter Parcel Number") ||
+            nature.isEmpty() || nature.equals("Nature of Complaints") ||
+            description.isEmpty() || description.equals("Describe Your Issue")) {
+            JOptionPane.showMessageDialog(this,
+                "Please fill in all fields",
+                "Error",
+                JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        try {
+            conn = DatabaseConnection.getConnection();
+            if (conn != null) {
+                // First, verify if the parcel exists
+                String checkParcelQuery = "SELECT parcel_id FROM parcels WHERE tracking_number = ?";
+                PreparedStatement checkStmt = conn.prepareStatement(checkParcelQuery);
+                checkStmt.setString(1, parcelNumber);
+                ResultSet rs = checkStmt.executeQuery();
+
+                if (!rs.next()) {
+                    JOptionPane.showMessageDialog(this,
+                        "Invalid parcel number. Please enter a valid tracking number.",
+                        "Error",
+                        JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+
+                int parcelId = rs.getInt("parcel_id");
+                rs.close();
+                checkStmt.close();
+
+                // Insert the complaint
+                String insertQuery = "INSERT INTO complaints (parcel_id, user_id, nature, description, status) " +
+                                   "VALUES (?, ?, ?, ?, 'pending')";
+                PreparedStatement insertStmt = conn.prepareStatement(insertQuery);
+                insertStmt.setInt(1, parcelId);
+                insertStmt.setInt(2, 1); // TODO: Replace with actual logged-in user ID
+                insertStmt.setString(3, nature);
+                insertStmt.setString(4, description);
+                
+                int result = insertStmt.executeUpdate();
+                insertStmt.close();
+
+                if (result > 0) {
+                    JOptionPane.showMessageDialog(this,
+                        "Complaint submitted successfully!",
+                        "Success",
+                        JOptionPane.INFORMATION_MESSAGE);
+                    clearForm();
+                } else {
+                    JOptionPane.showMessageDialog(this,
+                        "Failed to submit complaint. Please try again.",
+                        "Error",
+                        JOptionPane.ERROR_MESSAGE);
+                }
             }
-        });
+        } catch (SQLException ex) {
+            JOptionPane.showMessageDialog(this,
+                "Database error: " + ex.getMessage(),
+                "Error",
+                JOptionPane.ERROR_MESSAGE);
+        } finally {
+            DatabaseConnection.closeConnection(conn);
+        }
     }
 
     private JTextField createStyledTextField(String placeholder) {
@@ -173,6 +230,24 @@ public class ComplaintsFrame extends JFrame {
             BorderFactory.createEmptyBorder(10, 10, 10, 10)
         ));
         field.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
+
+        // Add focus listeners for placeholder behavior
+        field.addFocusListener(new java.awt.event.FocusAdapter() {
+            public void focusGained(java.awt.event.FocusEvent evt) {
+                if (field.getText().equals(placeholder)) {
+                    field.setText("");
+                    field.setForeground(Color.BLACK);
+                }
+            }
+
+            public void focusLost(java.awt.event.FocusEvent evt) {
+                if (field.getText().isEmpty()) {
+                    field.setText(placeholder);
+                    field.setForeground(Color.GRAY);
+                }
+            }
+        });
+
         return field;
     }
 
