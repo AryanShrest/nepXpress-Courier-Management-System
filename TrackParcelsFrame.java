@@ -10,13 +10,12 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.sql.*;
-import java.util.Vector;
 
 /**
  *
  * @author kabin
  */
-public class TrackParcelsFrame extends javax.swing.JFrame {
+public class TrackParcelsFrame extends JFrame {
 
     private JTextField trackingField;
     private JButton searchButton;
@@ -27,7 +26,10 @@ public class TrackParcelsFrame extends javax.swing.JFrame {
      * Creates new form java
      */
     public TrackParcelsFrame() {
-        initComponents();
+        setTitle("nepXpress — Track Parcels");
+        setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+        setSize(1280, 720);
+        setLocationRelativeTo(null);
         setupUI();
     }
 
@@ -42,24 +44,18 @@ public class TrackParcelsFrame extends javax.swing.JFrame {
         JPanel headerPanel = new JPanel();
         headerPanel.setLayout(new BoxLayout(headerPanel, BoxLayout.Y_AXIS));
         headerPanel.setBackground(Color.WHITE);
-        headerPanel.setBorder(new EmptyBorder(16,25,16,25));
+        headerPanel.setBorder(new EmptyBorder(16, 25, 16, 25));
 
-        JLabel headerLabel = new JLabel("Track");
+        JLabel headerLabel = new JLabel("Track Parcels");
         headerLabel.setFont(new Font("SansSerif", Font.BOLD, 24));
         headerLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
         headerPanel.add(headerLabel);
         
-        JSeparator line1 = new JSeparator();
-        line1.setMaximumSize(new Dimension(Integer.MAX_VALUE, 1));
-        line1.setForeground(new Color(200, 200, 200));
+        JSeparator separator = new JSeparator();
+        separator.setMaximumSize(new Dimension(Integer.MAX_VALUE, 1));
+        separator.setForeground(new Color(200, 200, 200));
         headerPanel.add(Box.createVerticalStrut(8));
-        headerPanel.add(line1);
-        
-        JSeparator line2 = new JSeparator();
-        line2.setMaximumSize(new Dimension(Integer.MAX_VALUE, 1));
-        line2.setForeground(new Color(200, 200, 200));
-        headerPanel.add(Box.createVerticalStrut(2));
-        headerPanel.add(line2);
+        headerPanel.add(separator);
 
         mainPanel.add(headerPanel, BorderLayout.NORTH);
 
@@ -68,7 +64,7 @@ public class TrackParcelsFrame extends javax.swing.JFrame {
         searchPanel.setBackground(Color.WHITE);
         searchPanel.setBorder(new EmptyBorder(20, 25, 20, 25));
 
-        JLabel trackingLabel = new JLabel("Enter Tracking Number");
+        JLabel trackingLabel = new JLabel("Enter Tracking Number:");
         trackingLabel.setFont(new Font("SansSerif", Font.PLAIN, 14));
         
         trackingField = new JTextField(30);
@@ -78,7 +74,8 @@ public class TrackParcelsFrame extends javax.swing.JFrame {
         searchButton.setBackground(new Color(66, 133, 244));
         searchButton.setForeground(Color.WHITE);
         searchButton.setPreferredSize(new Dimension(100, 35));
-        searchButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        searchButton.setBorderPainted(false);
+        searchButton.setFocusPainted(false);
 
         searchPanel.add(trackingLabel);
         searchPanel.add(Box.createHorizontalStrut(10));
@@ -203,10 +200,19 @@ public class TrackParcelsFrame extends javax.swing.JFrame {
         pstmt.setString(1, trackingNumber);
         ResultSet rs = pstmt.executeQuery();
 
+        // Create tracking history panel
         JPanel historyPanel = new JPanel();
         historyPanel.setLayout(new BoxLayout(historyPanel, BoxLayout.Y_AXIS));
         historyPanel.setBackground(Color.WHITE);
-        historyPanel.setBorder(BorderFactory.createTitledBorder("Tracking History"));
+        historyPanel.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(200, 200, 200)),
+            BorderFactory.createEmptyBorder(20, 20, 20, 20)
+        ));
+
+        JLabel historyLabel = new JLabel("Tracking History");
+        historyLabel.setFont(new Font("SansSerif", Font.BOLD, 16));
+        historyPanel.add(historyLabel);
+        historyPanel.add(Box.createVerticalStrut(15));
 
         boolean hasHistory = false;
         while (rs.next()) {
@@ -215,8 +221,13 @@ public class TrackParcelsFrame extends javax.swing.JFrame {
             historyRow.setBackground(Color.WHITE);
             
             JLabel dateLabel = new JLabel(rs.getTimestamp("created_at").toString());
+            dateLabel.setFont(new Font("SansSerif", Font.PLAIN, 14));
+            
             JLabel statusLabel = new JLabel(rs.getString("status"));
+            statusLabel.setFont(new Font("SansSerif", Font.BOLD, 14));
+            
             JLabel locationLabel = new JLabel(rs.getString("location"));
+            locationLabel.setFont(new Font("SansSerif", Font.PLAIN, 14));
             
             historyRow.add(dateLabel);
             historyRow.add(Box.createHorizontalStrut(20));
@@ -230,51 +241,27 @@ public class TrackParcelsFrame extends javax.swing.JFrame {
 
         if (!hasHistory) {
             JLabel noHistoryLabel = new JLabel("No tracking history available");
-            noHistoryLabel.setFont(new Font("SansSerif", Font.ITALIC, 14));
+            noHistoryLabel.setFont(new Font("SansSerif", Font.PLAIN, 14));
             historyPanel.add(noHistoryLabel);
         }
 
-        resultPanel.add(historyPanel);
         rs.close();
         pstmt.close();
-    }
-
-    /**
-     * This method is called from within the constructor to initialize the form.
-     * WARNING: Do NOT modify this code. The content of this method is always
-     * regenerated by the Form Editor.
-     */
-    @SuppressWarnings("unchecked")
-    private void initComponents() {
-        setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
+        resultPanel.add(historyPanel);
     }
 
     /**
      * @param args the command line arguments
      */
-    public static void main(String args[]) {
-        /* Set the Nimbus look and feel */
-        //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
-        /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
-         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
-         */
+    public static void main(String[] args) {
         try {
-            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
-                if ("Nimbus".equals(info.getName())) {
-                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
-                    break;
-                }
-            }
-        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | javax.swing.UnsupportedLookAndFeelException ex) {
-            java.util.logging.Logger.getLogger(TrackParcelsFrame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-        //</editor-fold>
 
-        /* Create and display the form */
-        java.awt.EventQueue.invokeLater(new Runnable() {
-            public void run() {
-                new TrackParcelsFrame().setVisible(true);
-            }
+        EventQueue.invokeLater(() -> {
+            new TrackParcelsFrame().setVisible(true);
         });
     }
 

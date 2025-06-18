@@ -8,7 +8,6 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.sql.*;
-import java.util.regex.Pattern;
 
 /**
  *
@@ -25,7 +24,10 @@ public class ComplaintsFrame extends JFrame {
      * Creates new form Java
      */
     public ComplaintsFrame() {
-        initComponents();
+        setTitle("nepXpress — Complaints");
+        setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+        setSize(1280, 720);
+        setLocationRelativeTo(null);
         setupUI();
     }
 
@@ -49,24 +51,18 @@ public class ComplaintsFrame extends JFrame {
         JPanel headerPanel = new JPanel();
         headerPanel.setLayout(new BoxLayout(headerPanel, BoxLayout.Y_AXIS));
         headerPanel.setBackground(Color.WHITE);
-        headerPanel.setBorder(new EmptyBorder(16,25,16,25));
+        headerPanel.setBorder(new EmptyBorder(16, 25, 16, 25));
 
         JLabel complaintsTitle = new JLabel("Complaints");
         complaintsTitle.setFont(new Font("SansSerif", Font.BOLD, 24));
         complaintsTitle.setAlignmentX(Component.LEFT_ALIGNMENT);
         headerPanel.add(complaintsTitle);
         
-        JSeparator line1 = new JSeparator();
-        line1.setMaximumSize(new Dimension(Integer.MAX_VALUE, 1));
-        line1.setForeground(new Color(200, 200, 200));
+        JSeparator separator = new JSeparator();
+        separator.setMaximumSize(new Dimension(Integer.MAX_VALUE, 1));
+        separator.setForeground(new Color(200, 200, 200));
         headerPanel.add(Box.createVerticalStrut(8));
-        headerPanel.add(line1);
-        
-        JSeparator line2 = new JSeparator();
-        line2.setMaximumSize(new Dimension(Integer.MAX_VALUE, 1));
-        line2.setForeground(new Color(200, 200, 200));
-        headerPanel.add(Box.createVerticalStrut(2));
-        headerPanel.add(line2);
+        headerPanel.add(separator);
 
         mainPanel.add(headerPanel, BorderLayout.NORTH);
 
@@ -82,12 +78,11 @@ public class ComplaintsFrame extends JFrame {
         raiseTicketsLabel.setForeground(new Color(242, 140, 72)); // Orange color
         raiseTicketsLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         
-        // Add some vertical spacing
         formPanel.add(Box.createVerticalStrut(20));
         formPanel.add(raiseTicketsLabel);
         formPanel.add(Box.createVerticalStrut(40));
 
-        // Form fields panel (to center the form)
+        // Form fields panel
         JPanel fieldsPanel = new JPanel();
         fieldsPanel.setLayout(new BoxLayout(fieldsPanel, BoxLayout.Y_AXIS));
         fieldsPanel.setBackground(Color.WHITE);
@@ -130,16 +125,14 @@ public class ComplaintsFrame extends JFrame {
         submitButton.setPreferredSize(new Dimension(120, 40));
         submitButton.setBorderPainted(false);
         submitButton.setFocusPainted(false);
-        submitButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
         submitButton.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        // Button Panel (to center the button)
+        // Button Panel
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
         buttonPanel.setBackground(Color.WHITE);
         buttonPanel.add(submitButton);
         
         fieldsPanel.add(buttonPanel);
-
         formPanel.add(fieldsPanel);
         mainPanel.add(formPanel, BorderLayout.CENTER);
 
@@ -206,7 +199,7 @@ public class ComplaintsFrame extends JFrame {
                     clearForm();
                 } else {
                     JOptionPane.showMessageDialog(this,
-                        "Failed to submit complaint. Please try again.",
+                        "Failed to submit complaint",
                         "Error",
                         JOptionPane.ERROR_MESSAGE);
                 }
@@ -231,7 +224,6 @@ public class ComplaintsFrame extends JFrame {
         ));
         field.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
 
-        // Add focus listeners for placeholder behavior
         field.addFocusListener(new java.awt.event.FocusAdapter() {
             public void focusGained(java.awt.event.FocusEvent evt) {
                 if (field.getText().equals(placeholder)) {
@@ -267,35 +259,15 @@ public class ComplaintsFrame extends JFrame {
     /**
      * @param args the command line arguments
      */
-    public static void main(String args[]) {
-        /* Set the Nimbus look and feel */
-        //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
-        /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
-         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
-         */
+    public static void main(String[] args) {
         try {
-            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
-                if ("Nimbus".equals(info.getName())) {
-                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
-                    break;
-                }
-            }
-        } catch (ClassNotFoundException ex) {
-            java.util.logging.Logger.getLogger(ComplaintsFrame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (InstantiationException ex) {
-            java.util.logging.Logger.getLogger(ComplaintsFrame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (IllegalAccessException ex) {
-            java.util.logging.Logger.getLogger(ComplaintsFrame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (javax.swing.UnsupportedLookAndFeelException ex) {
-            java.util.logging.Logger.getLogger(ComplaintsFrame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-        //</editor-fold>
 
-        /* Create and display the form */
-        java.awt.EventQueue.invokeLater(new Runnable() {
-            public void run() {
-                new ComplaintsFrame().setVisible(true);
-            }
+        EventQueue.invokeLater(() -> {
+            new ComplaintsFrame().setVisible(true);
         });
     }
 
