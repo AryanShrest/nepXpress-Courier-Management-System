@@ -25,6 +25,10 @@ import javax.mail.MessagingException;
 import nepxpress.util.EmailUtil;
 import nepxpress.database.UserDAO;
 import nepxpress.database.UserSessionDAO;
+import nepxpress.view.Dashboard;
+import nepxpress.view.RiderDashboard;
+import nepxpress.view.DashboardFrame;
+import nepxpress.view.SignupView;
 
 /**
  *
@@ -446,7 +450,11 @@ public class RegisterView extends javax.swing.JFrame {
                 
                 if (sessionDAO.validateSession(sessionToken)) {
                     // User is logged in
-                    if (accountType.equals("Rider")) {
+                    if ("Admin".equals(accountType)) {
+                        // Open admin dashboard
+                        Dashboard adminDashboard = new Dashboard();
+                        adminDashboard.setVisible(true);
+                    } else if ("Rider".equals(accountType)) {
                         // Open rider dashboard
                         RiderDashboard riderDashboard = new RiderDashboard(String.valueOf(userId));
                         riderDashboard.setVisible(true);

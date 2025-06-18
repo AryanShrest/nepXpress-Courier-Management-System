@@ -6,11 +6,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 public class TrackParcelsPanel extends JPanel {
-    private JTextField nameField;
-    private JTextField addressField;
-    private JTextField mobileField;
-    private JTextField emailField;
-    private JTextField courierTypeField;
     private JTextField referenceField;
     private JButton trackButton;
 
@@ -27,7 +22,7 @@ public class TrackParcelsPanel extends JPanel {
         headerPanel.setBackground(Color.WHITE);
         headerPanel.setBorder(new EmptyBorder(16,25,16,25));
 
-        JLabel headerLabel = new JLabel("Track Parcels");
+        JLabel headerLabel = new JLabel("Track Parcel");
         headerLabel.setFont(new Font("SansSerif", Font.BOLD, 24));
         headerLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
         headerPanel.add(headerLabel);
@@ -58,57 +53,14 @@ public class TrackParcelsPanel extends JPanel {
         gbc.gridwidth = 1;
         gbc.anchor = GridBagConstraints.WEST;
 
-        // Labels column
+        // Label
         gbc.gridx = 0;
         gbc.gridy = 0;
-        JLabel nameLabel = createLabel("Enter Name:");
-        formPanel.add(nameLabel, gbc);
-
-        gbc.gridy++;
-        JLabel addressLabel = createLabel("Enter Address:");
-        formPanel.add(addressLabel, gbc);
-
-        gbc.gridy++;
-        JLabel mobileLabel = createLabel("Enter Mobile Number:");
-        formPanel.add(mobileLabel, gbc);
-
-        gbc.gridy++;
-        JLabel emailLabel = createLabel("Enter email:");
-        formPanel.add(emailLabel, gbc);
-
-        gbc.gridy++;
-        JLabel typeLabel = createLabel("Enter Courier Type:");
-        formPanel.add(typeLabel, gbc);
-
-        gbc.gridy++;
         JLabel refLabel = createLabel("Enter Reference Number:");
         formPanel.add(refLabel, gbc);
 
-        // Fields column
+        // Field
         gbc.gridx = 1;
-        gbc.gridy = 0;
-        gbc.weightx = 1.0;
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        nameField = createTextField();
-        formPanel.add(nameField, gbc);
-
-        gbc.gridy++;
-        addressField = createTextField();
-        formPanel.add(addressField, gbc);
-
-        gbc.gridy++;
-        mobileField = createTextField();
-        formPanel.add(mobileField, gbc);
-
-        gbc.gridy++;
-        emailField = createTextField();
-        formPanel.add(emailField, gbc);
-
-        gbc.gridy++;
-        courierTypeField = createTextField();
-        formPanel.add(courierTypeField, gbc);
-
-        gbc.gridy++;
         referenceField = createTextField();
         formPanel.add(referenceField, gbc);
 
@@ -157,7 +109,6 @@ public class TrackParcelsPanel extends JPanel {
     }
 
     private void handleTrackButtonClick() {
-        // TODO: Implement tracking logic
         String reference = referenceField.getText().trim();
         if (reference.isEmpty()) {
             JOptionPane.showMessageDialog(this,
@@ -166,6 +117,10 @@ public class TrackParcelsPanel extends JPanel {
                 JOptionPane.WARNING_MESSAGE);
             return;
         }
-        // Add your tracking logic here
+        // TODO: Implement actual tracking logic here
+        JOptionPane.showMessageDialog(this,
+            "Searching for parcel: " + reference,
+            "Track Parcel",
+            JOptionPane.INFORMATION_MESSAGE);
     }
 } 

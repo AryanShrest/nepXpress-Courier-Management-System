@@ -303,25 +303,30 @@ public class DashboardFrame extends JFrame {
                     // Center content vertically and horizontally
                     bluePanel.add(Box.createVerticalGlue());
 
-                    // After dialog.pack(), maximize dialog window (must be set on the JDialog instance)
-                    SwingUtilities.invokeLater(() -> {
-                        Window dialogWindow = SwingUtilities.getWindowAncestor(bluePanel);
-                        if (dialogWindow instanceof JDialog) {
-                            JDialog dialog = (JDialog) dialogWindow;
-                            dialog.setResizable(false);
-                            dialog.setUndecorated(true);
-                            // Set to full screen bounds
-                            GraphicsEnvironment env = GraphicsEnvironment.getLocalGraphicsEnvironment();
-                            Rectangle bounds = env.getMaximumWindowBounds();
-                            dialog.setBounds(bounds);
-                            dialog.setAlwaysOnTop(true);
-                            // Optionally, add a semi-transparent overlay effect
-                            dialog.getContentPane().setBackground(new Color(240, 245, 255, 220));
-                        }
-                    });
+                // After dialog.pack(), maximize dialog window (must be set on the JDialog instance)
+                SwingUtilities.invokeLater(() -> {
+                    Window dialogWindow = SwingUtilities.getWindowAncestor(bluePanel);
+                    if (dialogWindow instanceof JDialog) {
+                        JDialog dlg = (JDialog) dialogWindow;
+                        dlg.setResizable(false);
+                        dlg.setUndecorated(true);
+                        // Set to full screen bounds
+                        GraphicsEnvironment env = GraphicsEnvironment.getLocalGraphicsEnvironment();
+                        Rectangle bounds = env.getMaximumWindowBounds();
+                        dlg.setBounds(bounds);
+                        dlg.setAlwaysOnTop(true);
+                        // Optionally, add a semi-transparent overlay effect
+                        dlg.getContentPane().setBackground(new Color(240, 245, 255, 220));
+                    }
+                });
 
-                    JLabel bigTitle = new JLabel("<html><span style='font-size:20px; font-weight:bold; color:#222;'>Is this goodbye?</span></html>");
-                    bigTitle.setFont(new Font("Segoe UI", Font.BOLD, 20));
+                JLabel bigTitle = new JLabel("<html><span style='font-size:20px; font-weight:bold; color:#222;'>Is this goodbye?</span></html>");
+                bigTitle.setFont(new Font("Segoe UI", Font.BOLD, 20));
+                bigTitle.setForeground(new Color(30, 60, 110));
+                bigTitle.setBorder(BorderFactory.createEmptyBorder(16, 30, 0, 0));
+                bigTitle.setAlignmentX(JLabel.LEFT_ALIGNMENT);
+                bigTitle.setAlignmentX(Component.CENTER_ALIGNMENT);
+                bluePanel.add(bigTitle);
                     bigTitle.setForeground(new Color(30, 60, 110));
                     bigTitle.setBorder(BorderFactory.createEmptyBorder(16, 30, 0, 0));
                     bigTitle.setAlignmentX(JLabel.LEFT_ALIGNMENT);

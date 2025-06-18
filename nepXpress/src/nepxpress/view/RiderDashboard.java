@@ -144,11 +144,21 @@ public class RiderDashboard extends JFrame {
             activeButton = button;
             
             switch (text) {
-                case "My Deliveries" -> showDeliveriesPanel();
-                case "My Pickup" -> showPickupPanel();
-                case "Cash Collected" -> showCashCollectedPanel();
-                case "Report Issue" -> showReportIssuePanel();
-                case "Daily Summary" -> showDailySummaryPanel();
+                case "My Deliveries":
+                    showDeliveriesPanel();
+                    break;
+                case "My Pickup":
+                    showPickupPanel();
+                    break;
+                case "Cash Collected":
+                    showCashCollectedPanel();
+                    break;
+                case "Report Issue":
+                    showReportIssuePanel();
+                    break;
+                case "Daily Summary":
+                    showDailySummaryPanel();
+                    break;
             }
         });
         
@@ -484,8 +494,33 @@ public class RiderDashboard extends JFrame {
             if (pid.isEmpty() || issue.equals("Select Issue Type") || desc.isEmpty()) {
                 JOptionPane.showMessageDialog(panel, "Please fill all fields and select an issue type.", "Error", JOptionPane.ERROR_MESSAGE);
             } else {
-                JOptionPane.showMessageDialog(panel, "Issue reported for Parcel ID: " + pid, "Reported", JOptionPane.INFORMATION_MESSAGE);
-                showDeliveriesPanel();
+                try {
+                    // Get rider ID from user ID
+                    int uid = Integer.parseInt(userId);
+                    nepxpress.database.RiderDAO riderDAO = new nepxpress.database.RiderDAO();
+                    nepxpress.database.RiderInfo riderInfo = riderDAO.getRiderByUserId(uid);
+                    
+                    if (riderInfo != null) {
+                        // Create issue title with parcel ID
+                        String issueTitle = issue + " - Parcel: " + pid;
+                        
+                        // Save to database
+                        nepxpress.database.RiderIssueDAO issueDAO = new nepxpress.database.RiderIssueDAO();
+                        boolean success = issueDAO.reportIssue(riderInfo.getId(), issueTitle, desc);
+                        
+                        if (success) {
+                            JOptionPane.showMessageDialog(panel, "Issue reported successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
+                            showDeliveriesPanel();
+                        } else {
+                            JOptionPane.showMessageDialog(panel, "Failed to report issue. Please try again.", "Error", JOptionPane.ERROR_MESSAGE);
+                        }
+                    } else {
+                        JOptionPane.showMessageDialog(panel, "Could not find rider information. Please try again.", "Error", JOptionPane.ERROR_MESSAGE);
+                    }
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                    JOptionPane.showMessageDialog(panel, "An error occurred. Please try again.", "Error", JOptionPane.ERROR_MESSAGE);
+                }
             }
         });
 

@@ -22,27 +22,18 @@
             <file>file:/C:/nepXpress%20-%20Management/nepXpress/src/nepxpress/database/RiderInfo.java</file>
             <file>file:/C:/nepXpress%20-%20Management/nepXpress/src/nepxpress/database/MySqlConnection.java</file>
             <file>file:/C:/nepXpress%20-%20Management/nepXpress/src/nepxpress/database/DatabaseConnection.java</file>
-            <file>file:/C:/nepXpress%20-%20Management/nepXpress/src/nepxpress/database/DatabaseConfig.java</file>
             <file>file:/C:/nepXpress%20-%20Management/nepXpress/src/nepxpress/database/DatabaseTest.java</file>
             <file>file:/C:/nepXpress%20-%20Management/nepXpress/src/Screenshot%202025-05-27%20184033.png</file>
             <file>file:/C:/nepXpress%20-%20Management/nepXpress/src/nepxpress/model/PickupRequest.java</file>
-            <file>file:/C:/nepXpress%20-%20Management/nepXpress/src/nepxpress/view/RiderDashboard.java</file>
+            <file>file:/C:/nepXpress%20-%20Management/nepXpress/src/nepxpress/dao/PickupRequestDAO.java</file>
+            <file>file:/C:/nepXpress%20-%20Management/nepXpress/src/nepxpress/view/Dashboard.java</file>
+            <file>file:/C:/nepXpress%20-%20Management/nepXpress/src/nepxpress/view/NepXpress.java</file>
+            <file>file:/C:/nepXpress%20-%20Management/nepXpress/src/nepxpress/view/ActionButtonRenderer.java</file>
+            <file>file:/C:/nepXpress%20-%20Management/nepXpress/src/nepxpress/view/DashboardFrame.java</file>
+            <file>file:/C:/nepXpress%20-%20Management/nepXpress/src/nepxpress/dao/RiderDAO.java</file>
+            <file>file:/C:/nepXpress%20-%20Management/nepXpress/src/nepxpress/view/ActionButtonsRenderer.java</file>
             <file>file:/C:/nepXpress%20-%20Management/nepXpress/src/nepxpress/view/Parcels.java</file>
             <file>file:/C:/nepXpress%20-%20Management/nepXpress/src/nepxpress/view/Main.java</file>
-            <file>file:/C:/nepXpress%20-%20Management/nepXpress/src/nepxpress/dao/PickupRequestDAO.java</file>
-            <file>file:/C:/nepXpress%20-%20Management/nepXpress/src/nepxpress/view/ActionButtonEditor.java</file>
-            <file>file:/C:/nepXpress%20-%20Management/nepXpress/src/nepxpress/view/ActionButtonRenderer.java</file>
-            <file>file:/C:/nepXpress%20-%20Management/nepXpress/src/nepxpress/view/ActionButtonsEditor.java</file>
-            <file>file:/C:/nepXpress%20-%20Management/nepXpress/src/nepxpress/view/ActionButtonsRenderer.java</file>
-            <file>file:/C:/nepXpress%20-%20Management/nepXpress/src/nepxpress/view/ComplaintsFrame.java</file>
-            <file>file:/C:/nepXpress%20-%20Management/nepXpress/src/nepxpress/view/ContactsFrame.java</file>
-            <file>file:/C:/nepXpress%20-%20Management/nepXpress/src/nepxpress/view/DashboardFrame.java</file>
-            <file>file:/C:/nepXpress%20-%20Management/nepXpress/src/nepxpress/view/DispatchFrame.java</file>
-            <file>file:/C:/nepXpress%20-%20Management/nepXpress/src/nepxpress/view/DispatchPanel.java</file>
-            <file>file:/C:/nepXpress%20-%20Management/nepXpress/src/nepxpress/view/ParcelsFrame.java</file>
-            <file>file:/C:/nepXpress%20-%20Management/nepXpress/src/nepxpress/view/RunDashboard.java</file>
-            <file>file:/C:/nepXpress%20-%20Management/nepXpress/src/nepxpress/view/TrackParcelsFrame.java</file>
-            <file>file:/C:/nepXpress%20-%20Management/nepXpress/src/nepxpress/view/TrackParcelsPanel.java</file>
         </group>
     </open-files>
 </project-private>
