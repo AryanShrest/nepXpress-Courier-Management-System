@@ -7,6 +7,8 @@ import javax.swing.table.JTableHeader;
 import javax.swing.table.TableCellRenderer;
 import java.awt.*;
 import java.awt.event.ActionListener;
+import java.sql.*;
+import java.util.Vector;
 
 public class ParcelsFrame extends JFrame {
     private JTable table;
@@ -15,10 +17,12 @@ public class ParcelsFrame extends JFrame {
     private JComboBox<String> entriesComboBox;
     private JButton prevButton, nextButton;
     private JLabel pageInfoLabel;
+    private Connection conn;
 
     public ParcelsFrame() {
         initComponents();
         setupUI();
+        loadParcelsData();
     }
 
     private void initComponents() {
@@ -120,10 +124,6 @@ public class ParcelsFrame extends JFrame {
         table.getColumnModel().getColumn(3).setPreferredWidth(120); // Receiver Name
         table.getColumnModel().getColumn(4).setPreferredWidth(100); // Status
         table.getColumnModel().getColumn(5).setPreferredWidth(200); // Action - Increased width
-
-        // Add sample data
-        model.addRow(new Object[]{1, "505604168988", "John Smith", "Sample", "Collected", ""});
-        model.addRow(new Object[]{2, "117967400213", "John Smith", "Claire Blake", "Collected", ""});
 
         // Style the status column
         table.getColumnModel().getColumn(4).setCellRenderer(new StatusColumnRenderer());
@@ -236,11 +236,11 @@ public class ParcelsFrame extends JFrame {
     private class ActionButtonsEditor extends DefaultCellEditor {
         private JPanel panel;
         private JButton viewBtn, editBtn, deleteBtn;
-        private String referenceNumber;
+        private String trackingNumber;
 
         public ActionButtonsEditor() {
             super(new JTextField());
-            panel = new JPanel(new FlowLayout(FlowLayout.CENTER, 3, 2));  // Reduced horizontal gap
+            panel = new JPanel(new FlowLayout(FlowLayout.CENTER, 3, 2));
             panel.setBackground(Color.WHITE);
 
             viewBtn = createActionButton("View", new Color(70, 192, 222), e -> handleView());
@@ -266,30 +266,52 @@ public class ParcelsFrame extends JFrame {
         }
 
         private void handleView() {
-            JOptionPane.showMessageDialog(null, "Viewing parcel: " + referenceNumber);
-            fireEditingStopped();
+            if (trackingNumber != null) {
+                // Implement view logic
+                JOptionPane.showMessageDialog(null, "View parcel: " + trackingNumber);
+            }
         }
 
         private void handleEdit() {
-            JOptionPane.showMessageDialog(null, "Editing parcel: " + referenceNumber);
-            fireEditingStopped();
+            if (trackingNumber != null) {
+                // Implement edit logic
+                JOptionPane.showMessageDialog(null, "Edit parcel: " + trackingNumber);
+            }
         }
 
         private void handleDelete() {
-            int confirm = JOptionPane.showConfirmDialog(null,
-                "Are you sure you want to delete parcel: " + referenceNumber + "?",
-                "Confirm Delete",
-                JOptionPane.YES_NO_OPTION);
-            if (confirm == JOptionPane.YES_OPTION) {
-                // Handle deletion
+            if (trackingNumber != null) {
+                int confirm = JOptionPane.showConfirmDialog(null,
+                    "Are you sure you want to delete this parcel?",
+                    "Confirm Delete",
+                    JOptionPane.YES_NO_OPTION);
+                
+                if (confirm == JOptionPane.YES_OPTION) {
+                    try {
+                        conn = DatabaseConnection.getConnection();
+                        if (conn != null) {
+                            String query = "DELETE FROM parcels WHERE tracking_number = ?";
+                            PreparedStatement pstmt = conn.prepareStatement(query);
+                            pstmt.setString(1, trackingNumber);
+                            pstmt.executeUpdate();
+                            pstmt.close();
+                            
+                            // Refresh the table
+                            loadParcelsData();
+                        }
+                    } catch (SQLException e) {
+                        JOptionPane.showMessageDialog(null, "Error deleting parcel: " + e.getMessage());
+                    } finally {
+                        DatabaseConnection.closeConnection(conn);
+                    }
+                }
             }
-            fireEditingStopped();
         }
 
         @Override
         public Component getTableCellEditorComponent(JTable table, Object value,
                 boolean isSelected, int row, int column) {
-            referenceNumber = table.getValueAt(row, 1).toString();
+            trackingNumber = table.getValueAt(row, 1).toString();
             return panel;
         }
 
@@ -297,6 +319,57 @@ public class ParcelsFrame extends JFrame {
         public Object getCellEditorValue() {
             return "";
         }
+    }
+
+    private void loadParcelsData() {
+        try {
+            conn = DatabaseConnection.getConnection();
+            if (conn != null) {
+                String query = "SELECT p.parcel_id, p.tracking_number, " +
+                             "CONCAT(u.first_name, ' ', u.last_name) as sender_name, " +
+                             "p.receiver_name, p.status " +
+                             "FROM parcels p " +
+                             "JOIN users u ON p.sender_id = u.user_id";
+                
+                PreparedStatement pstmt = conn.prepareStatement(query);
+                ResultSet rs = pstmt.executeQuery();
+                
+                // Clear existing data
+                model.setRowCount(0);
+                
+                // Add data to table
+                int rowNum = 1;
+                while (rs.next()) {
+                    Vector<Object> row = new Vector<>();
+                    row.add(rowNum++);
+                    row.add(rs.getString("tracking_number"));
+                    row.add(rs.getString("sender_name"));
+                    row.add(rs.getString("receiver_name"));
+                    row.add(rs.getString("status"));
+                    row.add(""); // Action column
+                    model.addRow(row);
+                }
+                
+                rs.close();
+                pstmt.close();
+                updatePaginationInfo();
+            }
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(this, "Error loading parcels: " + e.getMessage());
+        } finally {
+            DatabaseConnection.closeConnection(conn);
+        }
+    }
+
+    private void updatePaginationInfo() {
+        int totalRows = model.getRowCount();
+        int currentPage = 1;
+        int entriesPerPage = Integer.parseInt(entriesComboBox.getSelectedItem().toString());
+        int startEntry = (currentPage - 1) * entriesPerPage + 1;
+        int endEntry = Math.min(startEntry + entriesPerPage - 1, totalRows);
+        
+        pageInfoLabel.setText(String.format("Showing %d to %d of %d entries", 
+            startEntry, endEntry, totalRows));
     }
 
     public JPanel getMainPanel() {
