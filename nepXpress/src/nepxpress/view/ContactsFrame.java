@@ -151,8 +151,11 @@ public class ContactsFrame extends JFrame {
 
         // Form Fields
         fullNameField = createFormField("Full Name*");
+        addPlaceholderBehavior(fullNameField, "Full Name*");
         mobileNumberField = createFormField("Mobile Number*");
+        addPlaceholderBehavior(mobileNumberField, "Mobile Number*");
         emailField = createFormField("Email*");
+        addPlaceholderBehavior(emailField, "Email*");
         
         // Message Area
         messageArea = new JTextArea();
@@ -163,8 +166,7 @@ public class ContactsFrame extends JFrame {
             BorderFactory.createLineBorder(new Color(200, 200, 200)),
             BorderFactory.createEmptyBorder(10, 10, 10, 10)
         ));
-        messageArea.setText("Message*");
-        messageArea.setForeground(Color.GRAY);
+        addPlaceholderBehavior(messageArea, "Message*");
         JScrollPane scrollPane = new JScrollPane(messageArea);
         scrollPane.setMaximumSize(new Dimension(Integer.MAX_VALUE, 150));
         
@@ -236,11 +238,22 @@ public class ContactsFrame extends JFrame {
                 "Error",
                 JOptionPane.WARNING_MESSAGE);
         } else {
-            JOptionPane.showMessageDialog(this,
-                "Message sent successfully!",
-                "Success",
-                JOptionPane.INFORMATION_MESSAGE);
-            clearForm();
+            // Store in DB
+            boolean success = new nepxpress.database.ContactMessageDAO().insertContactMessage(
+                name, mobile, email, message
+            );
+            if (success) {
+                JOptionPane.showMessageDialog(this,
+                    "Message sent successfully!",
+                    "Success",
+                    JOptionPane.INFORMATION_MESSAGE);
+                clearForm();
+            } else {
+                JOptionPane.showMessageDialog(this,
+                    "Failed to send message. Please try again.",
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE);
+            }
         }
     }
 
@@ -253,14 +266,15 @@ public class ContactsFrame extends JFrame {
     }
 
     private void clearForm() {
-        fullNameField.setText("Full Name*");
-        fullNameField.setForeground(Color.GRAY);
-        mobileNumberField.setText("Mobile Number*");
-        mobileNumberField.setForeground(Color.GRAY);
-        emailField.setText("Email*");
-        emailField.setForeground(Color.GRAY);
-        messageArea.setText("Message*");
-        messageArea.setForeground(Color.GRAY);
+        fullNameField.setText("");
+        mobileNumberField.setText("");
+        emailField.setText("");
+        messageArea.setText("");
+        // Reset placeholders
+        addPlaceholderBehavior(fullNameField, "Full Name*");
+        addPlaceholderBehavior(mobileNumberField, "Mobile Number*");
+        addPlaceholderBehavior(emailField, "Email*");
+        addPlaceholderBehavior(messageArea, "Message*");
     }
 
     public JPanel getMainPanel() {
@@ -304,4 +318,44 @@ public class ContactsFrame extends JFrame {
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     // End of variables declaration//GEN-END:variables
+
+    // Add this helper method for JTextField
+    private void addPlaceholderBehavior(JTextField field, String placeholder) {
+        field.setText(placeholder);
+        field.setForeground(Color.GRAY);
+        field.addFocusListener(new java.awt.event.FocusAdapter() {
+            public void focusGained(java.awt.event.FocusEvent e) {
+                if (field.getText().equals(placeholder)) {
+                    field.setText("");
+                    field.setForeground(Color.BLACK);
+                }
+            }
+            public void focusLost(java.awt.event.FocusEvent e) {
+                if (field.getText().isEmpty()) {
+                    field.setText(placeholder);
+                    field.setForeground(Color.GRAY);
+                }
+            }
+        });
+    }
+
+    // Overload for JTextArea
+    private void addPlaceholderBehavior(JTextArea area, String placeholder) {
+        area.setText(placeholder);
+        area.setForeground(Color.GRAY);
+        area.addFocusListener(new java.awt.event.FocusAdapter() {
+            public void focusGained(java.awt.event.FocusEvent e) {
+                if (area.getText().equals(placeholder)) {
+                    area.setText("");
+                    area.setForeground(Color.BLACK);
+                }
+            }
+            public void focusLost(java.awt.event.FocusEvent e) {
+                if (area.getText().isEmpty()) {
+                    area.setText(placeholder);
+                    area.setForeground(Color.GRAY);
+                }
+            }
+        });
+    }
 }

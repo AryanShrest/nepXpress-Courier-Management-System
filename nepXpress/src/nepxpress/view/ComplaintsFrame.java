@@ -13,6 +13,9 @@ public class ComplaintsFrame extends JFrame {
     private JTextField natureField;
     private JTextArea descriptionArea;
     private JButton submitButton;
+    private JTextField fullNameField;
+    private JTextField mobileNumberField;
+    private JTextField emailField;
 
     /**
      * Creates new form Java
@@ -87,13 +90,31 @@ public class ComplaintsFrame extends JFrame {
         fieldsPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
         fieldsPanel.setMaximumSize(new Dimension(600, Integer.MAX_VALUE));
 
+        // Add new contact fields above parcel number
+        fullNameField = createStyledTextField("Full Name");
+        addPlaceholderBehavior(fullNameField, "Full Name");
+        fieldsPanel.add(fullNameField);
+        fieldsPanel.add(Box.createVerticalStrut(15));
+
+        mobileNumberField = createStyledTextField("Mobile Number");
+        addPlaceholderBehavior(mobileNumberField, "Mobile Number");
+        fieldsPanel.add(mobileNumberField);
+        fieldsPanel.add(Box.createVerticalStrut(15));
+
+        emailField = createStyledTextField("Email");
+        addPlaceholderBehavior(emailField, "Email");
+        fieldsPanel.add(emailField);
+        fieldsPanel.add(Box.createVerticalStrut(20));
+
         // Parcel Number Field
         parcelNumberField = createStyledTextField("Enter Parcel Number");
+        addPlaceholderBehavior(parcelNumberField, "Enter Parcel Number");
         fieldsPanel.add(parcelNumberField);
         fieldsPanel.add(Box.createVerticalStrut(20));
 
         // Nature of Complaints Field
         natureField = createStyledTextField("Nature of Complaints");
+        addPlaceholderBehavior(natureField, "Nature of Complaints");
         fieldsPanel.add(natureField);
         fieldsPanel.add(Box.createVerticalStrut(20));
 
@@ -111,6 +132,7 @@ public class ComplaintsFrame extends JFrame {
         scrollPane.setMaximumSize(new Dimension(Integer.MAX_VALUE, 200));
         descriptionArea.setText("Describe Your Issue");
         descriptionArea.setForeground(Color.GRAY);
+        addPlaceholderBehavior(descriptionArea, "Describe Your Issue");
 
         fieldsPanel.add(scrollPane);
         fieldsPanel.add(Box.createVerticalStrut(30));
@@ -140,22 +162,39 @@ public class ComplaintsFrame extends JFrame {
 
         // Add action listener for submit button
         submitButton.addActionListener(e -> {
+            String fullName = fullNameField.getText();
+            String mobile = mobileNumberField.getText();
+            String email = emailField.getText();
             String parcelNumber = parcelNumberField.getText();
             String nature = natureField.getText();
             String description = descriptionArea.getText();
-            
-            if (parcelNumber.isEmpty() || nature.isEmpty() || description.isEmpty() || 
-                description.equals("Describe Your Issue")) {
+            if (fullName.isEmpty() || fullName.equals("Full Name") ||
+                mobile.isEmpty() || mobile.equals("Mobile Number") ||
+                email.isEmpty() || email.equals("Email") ||
+                parcelNumber.isEmpty() || parcelNumber.equals("Enter Parcel Number") ||
+                nature.isEmpty() || nature.equals("Nature of Complaints") ||
+                description.isEmpty() || description.equals("Describe Your Issue")) {
                 JOptionPane.showMessageDialog(this,
                     "Please fill in all fields",
                     "Error",
                     JOptionPane.WARNING_MESSAGE);
             } else {
-                JOptionPane.showMessageDialog(this,
-                    "Complaint submitted successfully!",
-                    "Success",
-                    JOptionPane.INFORMATION_MESSAGE);
-                clearForm();
+                // Store in DB
+                boolean success = new nepxpress.database.ComplaintDAO().insertComplaint(
+                    parcelNumber, nature, description, fullName, mobile, email
+                );
+                if (success) {
+                    JOptionPane.showMessageDialog(this,
+                        "Complaint submitted successfully!",
+                        "Success",
+                        JOptionPane.INFORMATION_MESSAGE);
+                    clearForm();
+                } else {
+                    JOptionPane.showMessageDialog(this,
+                        "Failed to submit complaint. Please try again.",
+                        "Error",
+                        JOptionPane.ERROR_MESSAGE);
+                }
             }
         });
     }
@@ -172,13 +211,58 @@ public class ComplaintsFrame extends JFrame {
         return field;
     }
 
+    private void addPlaceholderBehavior(JTextField field, String placeholder) {
+        field.setText(placeholder);
+        field.setForeground(Color.GRAY);
+        field.addFocusListener(new java.awt.event.FocusAdapter() {
+            public void focusGained(java.awt.event.FocusEvent e) {
+                if (field.getText().equals(placeholder)) {
+                    field.setText("");
+                    field.setForeground(Color.BLACK);
+                }
+            }
+            public void focusLost(java.awt.event.FocusEvent e) {
+                if (field.getText().isEmpty()) {
+                    field.setText(placeholder);
+                    field.setForeground(Color.GRAY);
+                }
+            }
+        });
+    }
+
+    private void addPlaceholderBehavior(JTextArea area, String placeholder) {
+        area.setText(placeholder);
+        area.setForeground(Color.GRAY);
+        area.addFocusListener(new java.awt.event.FocusAdapter() {
+            public void focusGained(java.awt.event.FocusEvent e) {
+                if (area.getText().equals(placeholder)) {
+                    area.setText("");
+                    area.setForeground(Color.BLACK);
+                }
+            }
+            public void focusLost(java.awt.event.FocusEvent e) {
+                if (area.getText().isEmpty()) {
+                    area.setText(placeholder);
+                    area.setForeground(Color.GRAY);
+                }
+            }
+        });
+    }
+
     private void clearForm() {
-        parcelNumberField.setText("Enter Parcel Number");
-        parcelNumberField.setForeground(Color.GRAY);
-        natureField.setText("Nature of Complaints");
-        natureField.setForeground(Color.GRAY);
-        descriptionArea.setText("Describe Your Issue");
-        descriptionArea.setForeground(Color.GRAY);
+        fullNameField.setText("");
+        mobileNumberField.setText("");
+        emailField.setText("");
+        parcelNumberField.setText("");
+        natureField.setText("");
+        descriptionArea.setText("");
+        // Reset placeholders
+        addPlaceholderBehavior(fullNameField, "Full Name");
+        addPlaceholderBehavior(mobileNumberField, "Mobile Number");
+        addPlaceholderBehavior(emailField, "Email");
+        addPlaceholderBehavior(parcelNumberField, "Enter Parcel Number");
+        addPlaceholderBehavior(natureField, "Nature of Complaints");
+        addPlaceholderBehavior(descriptionArea, "Describe Your Issue");
     }
 
     public JPanel getMainPanel() {

@@ -99,11 +99,33 @@ public class DispatchPanel extends JPanel {
         gbc.gridy = 0;
         courierWeightField = createStyledTextField(20);
         formPanel.add(courierWeightField, gbc);
+        // Add DocumentListener for auto amount calculation
+        courierWeightField.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
+            private void updateAmount() {
+                String text = courierWeightField.getText().trim();
+                if (!text.isEmpty()) {
+                    try {
+                        double weight = Double.parseDouble(text);
+                        double rate = 20.0; // 20 per kg
+                        double amount = weight * rate;
+                        amountField.setText(String.format("%.2f", amount));
+                    } catch (NumberFormatException ex) {
+                        amountField.setText("");
+                    }
+                } else {
+                    amountField.setText("");
+                }
+            }
+            public void insertUpdate(javax.swing.event.DocumentEvent e) { updateAmount(); }
+            public void removeUpdate(javax.swing.event.DocumentEvent e) { updateAmount(); }
+            public void changedUpdate(javax.swing.event.DocumentEvent e) { updateAmount(); }
+        });
         gbc.gridy = 1;
         courierTypeField = createStyledTextField(20);
         formPanel.add(courierTypeField, gbc);
         gbc.gridy = 2;
         amountField = createStyledTextField(20);
+        amountField.setEditable(false);
         formPanel.add(amountField, gbc);
         
         // Create button

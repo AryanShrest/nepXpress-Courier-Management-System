@@ -110,6 +110,33 @@ public class DatabaseConfig {
         "FOREIGN KEY (branch_id) REFERENCES branches(id) ON DELETE SET NULL" +
         ")";
 
+    public static final String CREATE_COMPLAINTS_TABLE = "CREATE TABLE IF NOT EXISTS complaints (" +
+        "id INT AUTO_INCREMENT PRIMARY KEY," +
+        "parcel_number VARCHAR(50)," +
+        "nature VARCHAR(255)," +
+        "description TEXT NOT NULL," +
+        "full_name VARCHAR(100)," +
+        "mobile_number VARCHAR(30)," +
+        "email VARCHAR(100)," +
+        "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP" +
+        ")";
+
+    public static final String CREATE_CONTACT_MESSAGES_TABLE = "CREATE TABLE IF NOT EXISTS contact_messages (" +
+        "id INT AUTO_INCREMENT PRIMARY KEY," +
+        "full_name VARCHAR(100) NOT NULL," +
+        "mobile_number VARCHAR(30) NOT NULL," +
+        "email VARCHAR(100) NOT NULL," +
+        "message TEXT NOT NULL," +
+        "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP" +
+        ")";
+
+    public static final String CREATE_DEACTIVATED_ACCOUNTS_TABLE = "CREATE TABLE IF NOT EXISTS deactivated_accounts (" +
+        "id INT AUTO_INCREMENT PRIMARY KEY," +
+        "username VARCHAR(100) NOT NULL," +
+        "reason VARCHAR(255)," +
+        "deactivated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP" +
+        ")";
+
     // Sample data insertion queries
     public static final String INSERT_SAMPLE_DATA =
         "INSERT INTO users (first_name, surname, email_or_mobile, password, date_of_birth, gender, account_type) VALUES " +

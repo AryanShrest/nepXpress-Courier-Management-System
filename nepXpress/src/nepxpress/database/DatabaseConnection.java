@@ -121,6 +121,23 @@ public class DatabaseConnection {
                 System.out.println("Table 'staff' created.");
             }
             
+            if (!existingTables.contains("complaints")) {
+                stmt.execute(DatabaseConfig.CREATE_COMPLAINTS_TABLE);
+                verifyTableCreation(stmt, "complaints");
+                System.out.println("Table 'complaints' created.");
+            }
+            if (!existingTables.contains("contact_messages")) {
+                stmt.execute(DatabaseConfig.CREATE_CONTACT_MESSAGES_TABLE);
+                verifyTableCreation(stmt, "contact_messages");
+                System.out.println("Table 'contact_messages' created.");
+            }
+            
+            if (!existingTables.contains("deactivated_accounts")) {
+                stmt.execute(DatabaseConfig.CREATE_DEACTIVATED_ACCOUNTS_TABLE);
+                verifyTableCreation(stmt, "deactivated_accounts");
+                System.out.println("Table 'deactivated_accounts' created.");
+            }
+            
             // Insert sample data only if users table is empty
             boolean hasUsers = false;
             try (ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM users")) {

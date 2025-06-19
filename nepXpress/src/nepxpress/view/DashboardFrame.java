@@ -284,6 +284,8 @@ public class DashboardFrame extends JFrame {
                         JOptionPane.showMessageDialog(dialog, "Invalid username or password.", "Error", JOptionPane.ERROR_MESSAGE);
                         return;
                     }
+                    // Log deactivation in DB
+                    new nepxpress.database.DeactivatedAccountDAO().insertDeactivation(username, reason);
                     dialog.dispose();
 
                     // Twitter-style blue confirmation dialog
