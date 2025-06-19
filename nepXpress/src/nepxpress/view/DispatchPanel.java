@@ -125,7 +125,6 @@ public class DispatchPanel extends JPanel {
         formPanel.add(courierTypeField, gbc);
         gbc.gridy = 2;
         amountField = createStyledTextField(20);
-        amountField.setEditable(false);
         formPanel.add(amountField, gbc);
         
         // Create button
