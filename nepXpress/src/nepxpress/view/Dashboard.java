@@ -2,11 +2,25 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JFrame.java to edit this template
  */
-package nepxpress;
+package nepxpress.view;
 
 import javax.swing.*;
+import javax.swing.Box;
+import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableCellRenderer;
 import java.awt.*;
 import javax.imageio.ImageIO;
+import java.util.List;
+
+// Add RegisterView import to fix "cannot find symbol" error
+import nepxpress.view.RegisterView;
+
+// Add EmailUtil import to fix email notification functionality
+import nepxpress.util.EmailUtil;
+
+// Add RiderDAO and RiderInfo import to fix "cannot find symbol" error
+import nepxpress.database.RiderDAO;
+import nepxpress.database.RiderInfo;
 
 /**
  *
@@ -19,6 +33,7 @@ public class Dashboard extends javax.swing.JFrame {
     private javax.swing.JPanel branchContent;
     private javax.swing.JPanel staffListContent;
     private javax.swing.JPanel parcelsContent;
+    private javax.swing.JPanel trackParcelsContent;
     private javax.swing.table.DefaultTableModel branchTableModel;
     private javax.swing.table.DefaultTableModel parcelsTableModel;
     private javax.swing.JTextField branchSearchField;
@@ -33,36 +48,68 @@ public class Dashboard extends javax.swing.JFrame {
     public Dashboard() {
         initComponents();
         setupMainLayout();
+        
+        // Setup dashboard content first to ensure it's ready when shown
         setupDashboardContent();
+        
+        // Setup other content panels
         setupBranchContent();
         setupStaffListContent();
         setupParcelsContent();
+        setupTrackParcelsContent();
         
-        // Add action listener for dashboard button
-        dashboardButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                ((java.awt.CardLayout) contentPanel.getLayout()).show(contentPanel, "dashboard");
-            }
-        });
+        // Initialize rider approval panel
+        riderApprovalContent = new JPanel();
+        contentPanel.add(riderApprovalContent, "rider_approval");
         
-        // Add action listener for branch button
-        branchButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                ((java.awt.CardLayout) contentPanel.getLayout()).show(contentPanel, "branch");
-            }
-        });
-
-        // Add action listener for staff list
-        jComboBox1.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                if (jComboBox1.getSelectedItem().equals("List All")) {
-                    ((java.awt.CardLayout) contentPanel.getLayout()).show(contentPanel, "stafflist");
+        // Call the rider approval panel initialization once to ensure it's ready
+        try {
+            showRiderApprovalPanel();
+        } catch (Exception e) {
+            System.err.println("Error initializing rider approval panel: " + e.getMessage());
+            e.printStackTrace();
+        }
+        
+        // Show dashboard as default view
+        showDashboardView();
+        
+        // Always maximize the window when it opens
+        setExtendedState(javax.swing.JFrame.MAXIMIZED_BOTH);
+        
+        // Add window state listener to maintain maximized state
+        addWindowStateListener(new java.awt.event.WindowStateListener() {
+            public void windowStateChanged(java.awt.event.WindowEvent evt) {
+                if (evt.getNewState() != java.awt.Frame.MAXIMIZED_BOTH) {
+                    setExtendedState(javax.swing.JFrame.MAXIMIZED_BOTH);
                 }
             }
         });
+    }
+
+    /**
+     * Explicitly shows the dashboard view
+     */
+    private void showDashboardView() {
+        // Ensure the dashboard content is visible
+        java.awt.CardLayout cardLayout = (java.awt.CardLayout) contentPanel.getLayout();
+        cardLayout.show(contentPanel, "dashboard");
         
-        // Show dashboard by default
-        ((java.awt.CardLayout) contentPanel.getLayout()).show(contentPanel, "dashboard");
+        // Make sure the content is refreshed
+        dashboardContent.revalidate();
+        dashboardContent.repaint();
+        contentPanel.revalidate();
+        contentPanel.repaint();
+        
+        // Highlight the dashboard button as active
+        java.awt.Color primaryColor = new java.awt.Color(16, 42, 67);
+        java.awt.Color activeColor = new java.awt.Color(40, 90, 130);
+        
+        if (branchButton != null) branchButton.setBackground(primaryColor);
+        if (staffButton != null) staffButton.setBackground(primaryColor);
+        if (parcelsButton != null) parcelsButton.setBackground(primaryColor);
+        if (trackparcelsButton != null) trackparcelsButton.setBackground(primaryColor);
+        
+        if (dashboardButton != null) dashboardButton.setBackground(activeColor);
     }
 
     /**
@@ -78,8 +125,7 @@ public class Dashboard extends javax.swing.JFrame {
         dashboardButton = new javax.swing.JButton();
         branchButton = new javax.swing.JButton();
         parcelsButton = new javax.swing.JButton();
-        trackparcelsButton = new javax.swing.JButton();
-        jComboBox1 = new javax.swing.JComboBox<>();
+        staffButton = new javax.swing.JButton();
         jPanel2 = new javax.swing.JPanel();
         nepXpressLabel = new javax.swing.JLabel();
         contentPanel = new javax.swing.JPanel();
@@ -95,6 +141,9 @@ public class Dashboard extends javax.swing.JFrame {
         
         // Make window resizable
         setResizable(true);
+        
+        // Set to maximize on startup
+        setExtendedState(javax.swing.JFrame.MAXIMIZED_BOTH);
         
         // Center the window on screen
         setLocationRelativeTo(null);
@@ -141,57 +190,135 @@ public class Dashboard extends javax.swing.JFrame {
         });
 
         // Update the content panel to use better layout constraints
-        contentPanel.setLayout(new java.awt.BorderLayout());
+        contentPanel.setLayout(new java.awt.CardLayout());
         contentPanel.setBackground(java.awt.Color.WHITE);
         contentPanel.setBorder(javax.swing.BorderFactory.createEmptyBorder(0, 0, 0, 0));
 
-        // Make the sidebar (jPanel1) have a fixed preferred width
-        jPanel1.setPreferredSize(new java.awt.Dimension(200, jPanel1.getPreferredSize().height));
-        jPanel1.setMinimumSize(new java.awt.Dimension(200, 0));
+        // Create sidebar - make it similar to RiderDashboard
+        jPanel1.setBackground(new java.awt.Color(16, 42, 67)); // Darker blue #102A43
+        jPanel1.setLayout(new javax.swing.BoxLayout(jPanel1, javax.swing.BoxLayout.Y_AXIS));
+        jPanel1.setPreferredSize(new java.awt.Dimension(250, getHeight()));
+        
+        // Add some space at the top
+        jPanel1.add(Box.createVerticalStrut(25));
+        
+        // Dashboard title
+        adminLabel1.setForeground(java.awt.Color.WHITE);
+        adminLabel1.setFont(new java.awt.Font("Arial", java.awt.Font.BOLD, 28));
+        adminLabel1.setText("Admin");
+        adminLabel1.setBorder(javax.swing.BorderFactory.createEmptyBorder(0, 30, 0, 0));
+        adminLabel1.setAlignmentX(java.awt.Component.LEFT_ALIGNMENT);
+        jPanel1.add(adminLabel1);
+        
+        // Add more space after the title
+        jPanel1.add(Box.createVerticalStrut(40));
+        
+        // Define colors for the sidebar
+        java.awt.Color primaryColor = new java.awt.Color(16, 42, 67);    // #102A43
+        java.awt.Color hoverColor = new java.awt.Color(28, 66, 98);      // Darker shade for hover
+        java.awt.Color activeColor = new java.awt.Color(40, 90, 130);    // Active menu item color
 
-        // Make the top bar (jPanel2) have a fixed preferred height
-        jPanel2.setPreferredSize(new java.awt.Dimension(jPanel2.getPreferredSize().width, 45));
-        jPanel2.setMinimumSize(new java.awt.Dimension(0, 45));
+        // Create the sidebar buttons with similar styling to RiderDashboard
+        dashboardButton = createSidebarButton("Dashboard", primaryColor, hoverColor, activeColor);
+        dashboardButton.setBackground(activeColor); // Set as active by default
+        dashboardButton.addActionListener(e -> switchMainPanel("dashboard", dashboardButton));
+        jPanel1.add(dashboardButton);
+        jPanel1.add(Box.createVerticalStrut(10)); // Add spacing
+        
+        branchButton = createSidebarButton("Branch Staff", primaryColor, hoverColor, activeColor);
+        branchButton.addActionListener(e -> switchMainPanel("branch", branchButton));
+        jPanel1.add(branchButton);
+        jPanel1.add(Box.createVerticalStrut(10)); // Add spacing
+        
+        // Add Staff button
+        staffButton = createSidebarButton("Staff Management", primaryColor, hoverColor, activeColor);
+        staffButton.addActionListener(e -> switchMainPanel("staff", staffButton));
+        jPanel1.add(staffButton);
+        jPanel1.add(Box.createVerticalStrut(10)); // Add spacing
+        
+        parcelsButton = createSidebarButton("Parcels", primaryColor, hoverColor, activeColor);
+        parcelsButton.addActionListener(e -> switchMainPanel("parcels", parcelsButton));
+        jPanel1.add(parcelsButton);
+        jPanel1.add(Box.createVerticalStrut(10)); // Add spacing
+        
+        // Add Rider Approval button
+        riderApprovalButton = createSidebarButton("Rider Approvals", primaryColor, hoverColor, activeColor);
+        riderApprovalButton.addActionListener(e -> showRiderApprovalPanel());
+        jPanel1.add(riderApprovalButton);
+        jPanel1.add(Box.createVerticalStrut(10)); // Add spacing
 
-        jPanel1.setBackground(new java.awt.Color(30, 57, 76));
-        jPanel1.setVerifyInputWhenFocusTarget(false);
+        // Add Track Parcels button
+        trackparcelsButton = createSidebarButton("Track Parcels", primaryColor, hoverColor, activeColor);
+        trackparcelsButton.addActionListener(e -> switchMainPanel("trackparcels", trackparcelsButton));
+        jPanel1.add(trackparcelsButton);
+        jPanel1.add(Box.createVerticalStrut(10)); // Add spacing
 
-        adminLabel1.setFont(new java.awt.Font("Segoe UI", 1, 24)); // NOI18N
-        adminLabel1.setForeground(new java.awt.Color(255, 255, 255));
-        adminLabel1.setText("ADMIN");
+        // Initialize persistent rider approval panel and add to CardLayout
+        java.awt.Color sidebarBg = new java.awt.Color(15, 37, 55); // #0F2537
+        java.awt.Color sidebarSelected = new java.awt.Color(46, 92, 122); // #2E5C7A
+        java.awt.Color sidebarText = java.awt.Color.WHITE;
 
-        dashboardButton.setBackground(new java.awt.Color(30, 57, 76));
-        dashboardButton.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
-        dashboardButton.setForeground(new java.awt.Color(255, 255, 255));
+        dashboardButton.setBackground(sidebarSelected);
+        dashboardButton.setFont(new java.awt.Font("Segoe UI", java.awt.Font.PLAIN, 16));
+        dashboardButton.setForeground(sidebarText);
         dashboardButton.setText("Dashboard");
         dashboardButton.setBorder(null);
         dashboardButton.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
-        dashboardButton.setPreferredSize(new java.awt.Dimension(200, 35));
-        dashboardButton.setBorder(javax.swing.BorderFactory.createEmptyBorder(8, 15, 8, 15));
+        dashboardButton.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
+        dashboardButton.setPreferredSize(new java.awt.Dimension(200, 45));
+        dashboardButton.setBorder(javax.swing.BorderFactory.createEmptyBorder(10, 30, 10, 0));
 
-        branchButton.setBackground(new java.awt.Color(30, 57, 76));
-        branchButton.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
-        branchButton.setForeground(new java.awt.Color(255, 255, 255));
+        branchButton.setBackground(sidebarBg);
+        branchButton.setFont(new java.awt.Font("Segoe UI", java.awt.Font.PLAIN, 16));
+        branchButton.setForeground(sidebarText);
         branchButton.setText("Branch");
         branchButton.setBorder(null);
         branchButton.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        branchButton.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
+        branchButton.setPreferredSize(new java.awt.Dimension(200, 45));
+        branchButton.setBorder(javax.swing.BorderFactory.createEmptyBorder(10, 30, 10, 0));
 
-        parcelsButton.setBackground(new java.awt.Color(30, 57, 76));
-        parcelsButton.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
-        parcelsButton.setForeground(new java.awt.Color(255, 255, 255));
+        staffButton.setBackground(sidebarBg);
+        staffButton.setFont(new java.awt.Font("Segoe UI", java.awt.Font.PLAIN, 16));
+        staffButton.setForeground(sidebarText);
+        staffButton.setText("Staff");
+        staffButton.setBorder(null);
+        staffButton.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        staffButton.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
+        staffButton.setPreferredSize(new java.awt.Dimension(200, 45));
+        staffButton.setBorder(javax.swing.BorderFactory.createEmptyBorder(10, 30, 10, 0));
+
+        parcelsButton.setBackground(sidebarBg);
+        parcelsButton.setFont(new java.awt.Font("Segoe UI", java.awt.Font.PLAIN, 16));
+        parcelsButton.setForeground(sidebarText);
         parcelsButton.setText("Parcels");
         parcelsButton.setBorder(null);
         parcelsButton.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        parcelsButton.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
+        parcelsButton.setPreferredSize(new java.awt.Dimension(200, 45));
+        parcelsButton.setBorder(javax.swing.BorderFactory.createEmptyBorder(10, 30, 10, 0));
 
-        trackparcelsButton.setBackground(new java.awt.Color(30, 57, 76));
-        trackparcelsButton.setFont(new java.awt.Font("Segoe UI", 1, 12));
-        trackparcelsButton.setForeground(new java.awt.Color(255, 255, 255));
+        trackparcelsButton.setBackground(sidebarBg);
+        trackparcelsButton.setFont(new java.awt.Font("Segoe UI", java.awt.Font.PLAIN, 16));
+        trackparcelsButton.setForeground(sidebarText);
         trackparcelsButton.setText("Track Parcels");
         trackparcelsButton.setBorder(null);
         trackparcelsButton.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
         trackparcelsButton.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
-        trackparcelsButton.setIconTextGap(10);
+        trackparcelsButton.setPreferredSize(new java.awt.Dimension(200, 45));
+        trackparcelsButton.setBorder(javax.swing.BorderFactory.createEmptyBorder(10, 30, 10, 0));
+        trackparcelsButton.addActionListener(e -> switchMainPanel("trackparcels", trackparcelsButton));
         
+        riderApprovalButton.setBackground(sidebarBg);
+        riderApprovalButton.setFont(new java.awt.Font("Segoe UI", java.awt.Font.PLAIN, 16));
+        riderApprovalButton.setForeground(sidebarText);
+        riderApprovalButton.setText("Rider Approvals");
+        riderApprovalButton.setBorder(null);
+        riderApprovalButton.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        riderApprovalButton.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
+        riderApprovalButton.setPreferredSize(new java.awt.Dimension(200, 45));
+        riderApprovalButton.setBorder(javax.swing.BorderFactory.createEmptyBorder(10, 30, 10, 0));
+
         // Load and set the tracking icon
         try {
             javax.swing.ImageIcon originalIcon = new javax.swing.ImageIcon(getClass().getResource("/icons/tracking.png"));
@@ -201,50 +328,39 @@ public class Dashboard extends javax.swing.JFrame {
             System.err.println("Error loading tracking icon: " + e.getMessage());
         }
 
-        // Add padding to the button text
-        trackparcelsButton.setBorder(javax.swing.BorderFactory.createEmptyBorder(5, 15, 5, 15));
-
-        jComboBox1.setBackground(new java.awt.Color(30, 57, 76));
-        jComboBox1.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
-        jComboBox1.setForeground(new java.awt.Color(255, 255, 255));
-        jComboBox1.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Branch Staff", "Add New", "List All" }));
-        jComboBox1.setBorder(null);
-        jComboBox1.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
-
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addComponent(dashboardButton, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
             .addComponent(branchButton, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-            .addComponent(jComboBox1, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addGap(17, 17, 17)
-                .addComponent(adminLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 85, javax.swing.GroupLayout.PREFERRED_SIZE)
+            .addComponent(staffButton, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addComponent(parcelsButton, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addComponent(riderApprovalButton, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addComponent(trackparcelsButton, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addGroup(jPanel1Layout.createSequentialGroup()
+                .addGap(17, 17, 17)
+                .addComponent(adminLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 150, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap(33, Short.MAX_VALUE))
-                    .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addContainerGap()
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(parcelsButton, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(trackparcelsButton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                .addContainerGap())
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel1Layout.createSequentialGroup()
-                .addContainerGap()
+                .addGap(25, 25, 25)
                 .addComponent(adminLabel1)
-                .addGap(18, 18, 18)
-                .addComponent(dashboardButton, javax.swing.GroupLayout.PREFERRED_SIZE, 22, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(branchButton, javax.swing.GroupLayout.PREFERRED_SIZE, 22, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(jComboBox1, javax.swing.GroupLayout.PREFERRED_SIZE, 26, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(18, 18, 18)
-                .addComponent(parcelsButton, javax.swing.GroupLayout.PREFERRED_SIZE, 24, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(27, 27, 27)
-                .addComponent(trackparcelsButton, javax.swing.GroupLayout.PREFERRED_SIZE, 24, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(98, Short.MAX_VALUE))
+                .addGap(40, 40, 40)
+                .addComponent(dashboardButton, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(15, 15, 15)
+                .addComponent(branchButton, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(15, 15, 15)
+                .addComponent(staffButton, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(15, 15, 15)
+                .addComponent(parcelsButton, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(15, 15, 15)
+                .addComponent(riderApprovalButton, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(15, 15, 15)
+                .addComponent(trackparcelsButton, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(33, Short.MAX_VALUE))
         );
 
         jPanel2.setBackground(new java.awt.Color(70, 119, 150));
@@ -254,24 +370,37 @@ public class Dashboard extends javax.swing.JFrame {
         nepXpressLabel.setForeground(new java.awt.Color(255, 255, 255));
         nepXpressLabel.setText("nepXpress");
         nepXpressLabel.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-
-        // Add login button
-        JButton loginButton = new JButton("Login");
-        loginButton.setBackground(new java.awt.Color(30, 57, 76));
-        loginButton.setFont(new java.awt.Font("Segoe UI", 1, 12));
-        loginButton.setForeground(new java.awt.Color(255, 255, 255));
-        loginButton.setBorder(javax.swing.BorderFactory.createEmptyBorder(5, 15, 5, 15));
-        loginButton.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
-        loginButton.setFocusPainted(false);
-
-        // Add action listener to login button
-        loginButton.addActionListener(new java.awt.event.ActionListener() {
+        
+        // Add welcome user label
+        javax.swing.JLabel welcomeLabel = new javax.swing.JLabel("Welcome, Admin");
+        welcomeLabel.setFont(new java.awt.Font("Segoe UI", java.awt.Font.PLAIN, 14));
+        welcomeLabel.setForeground(java.awt.Color.WHITE);
+        welcomeLabel.setBorder(javax.swing.BorderFactory.createEmptyBorder(0, 15, 0, 0));
+        
+        // Add logout button
+        javax.swing.JButton logoutButton = new javax.swing.JButton("Logout");
+        logoutButton.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 12));
+        logoutButton.setBackground(new java.awt.Color(220, 53, 69)); // Red color
+        logoutButton.setForeground(java.awt.Color.WHITE);
+        logoutButton.setBorder(javax.swing.BorderFactory.createEmptyBorder(5, 15, 5, 15));
+        logoutButton.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        logoutButton.setFocusPainted(false);
+        logoutButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                // TODO: Add login functionality
-                JOptionPane.showMessageDialog(Dashboard.this,
-                    "Login functionality will be implemented soon!",
-                    "Login",
-                    JOptionPane.INFORMATION_MESSAGE);
+                int confirm = javax.swing.JOptionPane.showConfirmDialog(
+                    Dashboard.this, 
+                    "Are you sure you want to logout?", 
+                    "Confirm Logout", 
+                    javax.swing.JOptionPane.YES_NO_OPTION
+                );
+                
+                if (confirm == javax.swing.JOptionPane.YES_OPTION) {
+                    // Close the current window
+                    dispose();
+                    
+                    // Show login screen instead of exiting the application
+                    new RegisterView().setVisible(true);
+                }
             }
         });
 
@@ -280,11 +409,13 @@ public class Dashboard extends javax.swing.JFrame {
         jPanel2Layout.setHorizontalGroup(
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel2Layout.createSequentialGroup()
-                .addComponent(nepXpressLabel, javax.swing.GroupLayout.DEFAULT_SIZE, 
-                    javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(loginButton)
-                .addGap(20, 20, 20))
+                .addContainerGap()
+                .addComponent(welcomeLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 200, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(nepXpressLabel)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(logoutButton)
+                .addContainerGap())
         );
         jPanel2Layout.setVerticalGroup(
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -292,7 +423,8 @@ public class Dashboard extends javax.swing.JFrame {
                 .addContainerGap()
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(nepXpressLabel)
-                    .addComponent(loginButton))
+                    .addComponent(welcomeLabel)
+                    .addComponent(logoutButton))
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
@@ -329,66 +461,35 @@ public class Dashboard extends javax.swing.JFrame {
 
         pack();
         setLocationRelativeTo(null);
-        setupTrackParcelsContent();
     }// </editor-fold>//GEN-END:initComponents
 
     private void setupMainLayout() {
-        // Add action listeners for parcels and track parcels buttons
-        parcelsButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                ((java.awt.CardLayout) contentPanel.getLayout()).show(contentPanel, "parcels");
-            }
-        });
-
-        trackparcelsButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                ((java.awt.CardLayout) contentPanel.getLayout()).show(contentPanel, "trackparcels");
-            }
-        });
-
-        // Add Branch Staff menu items
-        jComboBox1.setModel(new javax.swing.DefaultComboBoxModel<>(new String[]{"Branch Staff", "Add New", "List All"}));
-        jComboBox1.setBackground(new java.awt.Color(30, 57, 76));
-        jComboBox1.setForeground(java.awt.Color.WHITE);
-        jComboBox1.setBorder(null);
-        jComboBox1.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                String selectedItem = (String) jComboBox1.getSelectedItem();
-                if ("Add New".equals(selectedItem)) {
-                    showAddStaffDialog();
-                    jComboBox1.setSelectedItem("Branch Staff"); // Reset selection
-                } else if ("List All".equals(selectedItem)) {
-                    ((java.awt.CardLayout) contentPanel.getLayout()).show(contentPanel, "stafflist");
-                    jComboBox1.setSelectedItem("Branch Staff"); // Reset selection
-                }
-            }
-        });
-
-        // Add hover effect to navigation buttons
-        java.awt.Color hoverColor = new java.awt.Color(40, 67, 86);
-        java.awt.Color defaultColor = new java.awt.Color(30, 57, 76);
-
-        javax.swing.JButton[] buttons = {dashboardButton, branchButton, parcelsButton, trackparcelsButton};
-        for (javax.swing.JButton button : buttons) {
-            button.addMouseListener(new java.awt.event.MouseAdapter() {
-                public void mouseEntered(java.awt.event.MouseEvent evt) {
-                    button.setBackground(hoverColor);
-                }
-                public void mouseExited(java.awt.event.MouseEvent evt) {
-                    button.setBackground(defaultColor);
-                }
-            });
-        }
-
-        // Add hover effect to combo box
-        jComboBox1.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseEntered(java.awt.event.MouseEvent evt) {
-                jComboBox1.setBackground(hoverColor);
-            }
-            public void mouseExited(java.awt.event.MouseEvent evt) {
-                jComboBox1.setBackground(defaultColor);
-            }
-        });
+        // Setup cardlayout content panel
+        contentPanel.removeAll();
+        contentPanel.setLayout(new java.awt.CardLayout());
+        
+        java.awt.CardLayout cardLayout = (java.awt.CardLayout) contentPanel.getLayout();
+        
+        javax.swing.JPanel container = new javax.swing.JPanel(new java.awt.BorderLayout());
+        container.add(jPanel1, java.awt.BorderLayout.WEST);
+        container.add(jPanel2, java.awt.BorderLayout.NORTH);
+        container.add(contentPanel, java.awt.BorderLayout.CENTER);
+        
+        // Set main content pane
+        setContentPane(container);
+        
+        // Ensure dashboard button is active
+        java.awt.Color primaryColor = new java.awt.Color(16, 42, 67);    // #102A43
+        java.awt.Color activeColor = new java.awt.Color(40, 90, 130);    // Active menu item color
+        
+        // Reset all button colors
+        if (branchButton != null) branchButton.setBackground(primaryColor);
+        if (staffButton != null) staffButton.setBackground(primaryColor);
+        if (parcelsButton != null) parcelsButton.setBackground(primaryColor);
+        if (trackparcelsButton != null) trackparcelsButton.setBackground(primaryColor);
+        
+        // Set dashboard button as active
+        if (dashboardButton != null) dashboardButton.setBackground(activeColor);
     }
 
     private void setupDashboardContent() {
@@ -407,7 +508,7 @@ public class Dashboard extends javax.swing.JFrame {
         javax.swing.JPanel titlePanel = new javax.swing.JPanel(new java.awt.FlowLayout(java.awt.FlowLayout.LEFT, 0, 0));
         titlePanel.setBackground(java.awt.Color.WHITE);
         javax.swing.JLabel titleLabel = new javax.swing.JLabel("Home");
-        titleLabel.setFont(new java.awt.Font("Segoe UI", java.awt.Font.PLAIN, 32));
+        titleLabel.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 32));
         titlePanel.add(titleLabel);
         titlePanel.setBorder(javax.swing.BorderFactory.createCompoundBorder(
             javax.swing.BorderFactory.createMatteBorder(0, 0, 1, 0, new java.awt.Color(200, 200, 200)),
@@ -430,11 +531,11 @@ public class Dashboard extends javax.swing.JFrame {
         cardsPanel.setLayout(new java.awt.GridLayout(2, 3, 30, 30));
         cardsPanel.setBackground(java.awt.Color.WHITE);
         
-        // Add cards
+        // Add cards with data
         addStatCard(cardsPanel, "Total Branches", "3", null);
         addStatCard(cardsPanel, "Staff", "50", null);
         addStatCard(cardsPanel, "Total Parcels", "10", null);
-        addStatCard(cardsPanel, "Delivered", "0", null);
+        addStatCard(cardsPanel, "Delivered", "8", null);
         addStatCard(cardsPanel, "In-Transit", "2", null);
         addStatCard(cardsPanel, "Shipped", "5", null);
         
@@ -449,82 +550,61 @@ public class Dashboard extends javax.swing.JFrame {
         scrollPane.setBorder(null);
         scrollPane.setHorizontalScrollBarPolicy(javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
         scrollPane.setVerticalScrollBarPolicy(javax.swing.ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);
-        scrollPane.getVerticalScrollBar().setUnitIncrement(16);
         
-        // Update the final assembly
+        // Add components to main content
         mainContent.add(titlePanel, java.awt.BorderLayout.NORTH);
         mainContent.add(scrollPane, java.awt.BorderLayout.CENTER);
+        
+        // Add main content to dashboard content
         dashboardContent.add(mainContent, java.awt.BorderLayout.CENTER);
         
-        // Add dashboard content to main content panel
-        contentPanel.add(dashboardContent, "dashboard");
+        // Force validation and repaint to ensure content is displayed
+        dashboardContent.revalidate();
+        dashboardContent.repaint();
         
-        // Add component listener to handle resizing
-        wrapperPanel.addComponentListener(new java.awt.event.ComponentAdapter() {
-            public void componentResized(java.awt.event.ComponentEvent evt) {
-                // Calculate card size based on available space
-                int availableWidth = wrapperPanel.getWidth() - 120; // Account for margins
-                int availableHeight = wrapperPanel.getHeight() - 100; // Account for margins
-                
-                // Calculate card dimensions (minimum 250x120, scales up with window)
-                int cardWidth = Math.max(250, availableWidth / 3 - 40);
-                int cardHeight = Math.max(120, availableHeight / 2 - 40);
-                
-                // Update card sizes
-                for (java.awt.Component comp : cardsPanel.getComponents()) {
-                    if (comp instanceof javax.swing.JPanel) {
-                        comp.setPreferredSize(new java.awt.Dimension(cardWidth, cardHeight));
-                        
-                        // Update font sizes based on card size
-                        javax.swing.JPanel card = (javax.swing.JPanel) comp;
-                        for (java.awt.Component cardComp : card.getComponents()) {
-                            if (cardComp instanceof javax.swing.JLabel) {
-                                javax.swing.JLabel label = (javax.swing.JLabel) cardComp;
-                                if (label.getFont().getSize() == 32) {
-                                    // Value label - scale between 32 and 48
-                                    int fontSize = Math.min(48, Math.max(32, cardWidth / 6));
-                                    label.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, fontSize));
-                                } else {
-                                    // Title label - scale between 14 and 20
-                                    int fontSize = Math.min(20, Math.max(14, cardWidth / 15));
-                                    label.setFont(new java.awt.Font("Segoe UI", java.awt.Font.PLAIN, fontSize));
-                                }
-                            }
-                        }
-                    }
-                }
-                
-                // Update cards panel size
-                cardsPanel.setPreferredSize(new java.awt.Dimension(
-                    cardWidth * 3 + 60,  // Total width plus gaps
-                    cardHeight * 2 + 30   // Total height plus gap
-                ));
-                
-                cardsPanel.revalidate();
-                cardsPanel.repaint();
-            }
-        });
+        // Add dashboard content to the cardlayout
+        contentPanel.add(dashboardContent, "dashboard");
     }
 
     private void addStatCard(javax.swing.JPanel parent, String title, String value, String iconPath) {
-        // Create card panel
+        // Create card panel with more attractive styling
         javax.swing.JPanel card = new javax.swing.JPanel();
         card.setLayout(new java.awt.BorderLayout(10, 5));
         card.setBackground(java.awt.Color.WHITE);
         card.setBorder(javax.swing.BorderFactory.createCompoundBorder(
-            javax.swing.BorderFactory.createLineBorder(new java.awt.Color(230, 230, 230), 1),
+            javax.swing.BorderFactory.createLineBorder(new java.awt.Color(63, 124, 172), 1),
             javax.swing.BorderFactory.createEmptyBorder(20, 20, 20, 20)
         ));
+        card.setPreferredSize(new java.awt.Dimension(250, 120));
         
         // Create value label with larger font
         javax.swing.JLabel valueLabel = new javax.swing.JLabel(value);
-        valueLabel.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 32));
+        valueLabel.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 36));
         valueLabel.setForeground(new java.awt.Color(30, 57, 76));
         
         // Create title label with smaller font
         javax.swing.JLabel titleLabel = new javax.swing.JLabel(title);
-        titleLabel.setFont(new java.awt.Font("Segoe UI", java.awt.Font.PLAIN, 14));
-        titleLabel.setForeground(new java.awt.Color(128, 128, 128));
+        titleLabel.setFont(new java.awt.Font("Segoe UI", java.awt.Font.PLAIN, 16));
+        titleLabel.setForeground(new java.awt.Color(88, 88, 88));
+        
+        // Add hover effect
+        card.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                card.setBorder(javax.swing.BorderFactory.createCompoundBorder(
+                    javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 92, 162), 2),
+                    javax.swing.BorderFactory.createEmptyBorder(19, 19, 19, 19)
+                ));
+            }
+            
+            @Override
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                card.setBorder(javax.swing.BorderFactory.createCompoundBorder(
+                    javax.swing.BorderFactory.createLineBorder(new java.awt.Color(63, 124, 172), 1),
+                    javax.swing.BorderFactory.createEmptyBorder(20, 20, 20, 20)
+                ));
+            }
+        });
         
         // Add components to card
         card.add(valueLabel, java.awt.BorderLayout.NORTH);
@@ -537,12 +617,13 @@ public class Dashboard extends javax.swing.JFrame {
     private javax.swing.JLabel adminLabel1;
     private javax.swing.JButton branchButton;
     private javax.swing.JButton dashboardButton;
-    private javax.swing.JComboBox<String> jComboBox1;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JLabel nepXpressLabel;
     private javax.swing.JButton parcelsButton;
+    private javax.swing.JButton riderApprovalButton;
     private javax.swing.JButton trackparcelsButton;
+    private javax.swing.JButton staffButton;
     // End of variables declaration//GEN-END:variables
 
     private void setupBranchContent() {
@@ -563,12 +644,12 @@ public class Dashboard extends javax.swing.JFrame {
         titlePanel.setBackground(java.awt.Color.WHITE);
         titlePanel.setBorder(javax.swing.BorderFactory.createEmptyBorder(0, 30, 0, 30));
         
-        // Add title "Branch List"
-        javax.swing.JLabel titleLabel = new javax.swing.JLabel("Branch List");
+        // Add title "Branch Locations"
+        javax.swing.JLabel titleLabel = new javax.swing.JLabel("Branch Locations");
         titleLabel.setFont(new java.awt.Font("Segoe UI", java.awt.Font.PLAIN, 32));
         titlePanel.add(titleLabel);
         
-        // Add separator
+        // Add separator below title
         titlePanel.setBorder(javax.swing.BorderFactory.createCompoundBorder(
             javax.swing.BorderFactory.createMatteBorder(0, 0, 1, 0, new java.awt.Color(200, 200, 200)),
             javax.swing.BorderFactory.createEmptyBorder(0, 0, 20, 0)
@@ -639,12 +720,30 @@ public class Dashboard extends javax.swing.JFrame {
         tablePanel.setBorder(null);
         
         // Create table model with column names
-        String[] columnNames = {"#", "Branch Code", "Street/Building/Brgy", "City/State/Zip", "Country", "Contact#", "Action"};
-        Object[][] data = {
-            {1, "vzTL0PqMogyOWhF", "Branch 1 St., Quiapo", "Manila, Metro Manila, 1001", "Philippines", "+2 123 455 623", ""},
-            {2, "Kylab3mYBgAX7Jt", "Sample", "Cebu, Cebu, 6000", "Philippines", "+1234567489", ""},
-            {3, "dlbUK5mEh96f0Zc", "Sample", "Sample, Sample, 123456", "Philippines", "123456", ""}
-        };
+        String[] columnNames = {"#", "Branch Code", "Branch Name", "Location", "Contact Number", "Email", "Action"};
+        
+        // Load branch data from database
+        java.util.List<nepxpress.model.Branch> branches = new java.util.ArrayList<>();
+        try {
+            nepxpress.dao.BranchDAO branchDAO = new nepxpress.dao.BranchDAO();
+            branches = branchDAO.getAllBranches();
+        } catch (Exception e) {
+            System.err.println("Error loading branches: " + e.getMessage());
+            e.printStackTrace();
+        }
+        
+        // Create data array for table
+        Object[][] data = new Object[branches.size()][columnNames.length];
+        for (int i = 0; i < branches.size(); i++) {
+            nepxpress.model.Branch branch = branches.get(i);
+            data[i][0] = i + 1;  // Index
+            data[i][1] = branch.getBranchCode();
+            data[i][2] = branch.getBranchName();
+            data[i][3] = branch.getLocation();
+            data[i][4] = branch.getContactNumber();
+            data[i][5] = branch.getEmail();
+            data[i][6] = "";  // Action column
+        }
         
         branchTableModel = new javax.swing.table.DefaultTableModel(data, columnNames) {
             @Override
@@ -679,7 +778,7 @@ public class Dashboard extends javax.swing.JFrame {
         footerPanel.setBorder(javax.swing.BorderFactory.createEmptyBorder(20, 30, 30, 30));
         
         // Add showing entries text
-        javax.swing.JLabel showingLabel = new javax.swing.JLabel("Showing 1 to 3 of 3 entries");
+        javax.swing.JLabel showingLabel = new javax.swing.JLabel("Showing 1 to " + branches.size() + " of " + branches.size() + " entries");
         footerPanel.add(showingLabel, java.awt.BorderLayout.WEST);
         
         // Add pagination
@@ -736,12 +835,12 @@ public class Dashboard extends javax.swing.JFrame {
         titlePanel.setBackground(java.awt.Color.WHITE);
         titlePanel.setBorder(javax.swing.BorderFactory.createEmptyBorder(0, 30, 0, 30));
         
-        // Add title "Staff List"
-        javax.swing.JLabel titleLabel = new javax.swing.JLabel("Staff List");
+        // Add title "Staff Management"
+        javax.swing.JLabel titleLabel = new javax.swing.JLabel("Staff Management");
         titleLabel.setFont(new java.awt.Font("Segoe UI", java.awt.Font.PLAIN, 32));
         titlePanel.add(titleLabel);
         
-        // Add separator
+        // Add separator below title
         titlePanel.setBorder(javax.swing.BorderFactory.createCompoundBorder(
             javax.swing.BorderFactory.createMatteBorder(0, 0, 1, 0, new java.awt.Color(200, 200, 200)),
             javax.swing.BorderFactory.createEmptyBorder(0, 0, 20, 0)
@@ -768,6 +867,40 @@ public class Dashboard extends javax.swing.JFrame {
         searchField.setPreferredSize(new java.awt.Dimension(200, 25));
         rightControls.add(new javax.swing.JLabel("Search:"));
         rightControls.add(searchField);
+
+        // Add New button
+        javax.swing.JButton addNewButton = new javax.swing.JButton("+ Add New");
+        addNewButton.setFont(new java.awt.Font("Segoe UI", java.awt.Font.PLAIN, 12));
+        addNewButton.setBackground(new java.awt.Color(0, 123, 255));
+        addNewButton.setForeground(java.awt.Color.WHITE);
+        addNewButton.setBorder(javax.swing.BorderFactory.createEmptyBorder(5, 10, 5, 10));
+        addNewButton.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        addNewButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                showAddStaffDialog();
+            }
+        });
+        rightControls.add(addNewButton);
+
+        // Add search functionality
+        searchField.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
+            public void changedUpdate(javax.swing.event.DocumentEvent e) { search(); }
+            public void removeUpdate(javax.swing.event.DocumentEvent e) { search(); }
+            public void insertUpdate(javax.swing.event.DocumentEvent e) { search(); }
+
+            public void search() {
+                String searchText = searchField.getText().toLowerCase();
+                javax.swing.table.TableRowSorter<javax.swing.table.DefaultTableModel> sorter = 
+                    new javax.swing.table.TableRowSorter<>(staffTableModel);
+                staffTable.setRowSorter(sorter);
+                
+                if (searchText.length() == 0) {
+                    sorter.setRowFilter(null);
+                } else {
+                    sorter.setRowFilter(javax.swing.RowFilter.regexFilter("(?i)" + searchText));
+                }
+            }
+        });
         
         controlsPanel.add(leftControls, java.awt.BorderLayout.WEST);
         controlsPanel.add(rightControls, java.awt.BorderLayout.EAST);
@@ -779,10 +912,31 @@ public class Dashboard extends javax.swing.JFrame {
         
         // Create table model with column names
         String[] columnNames = {"#", "Staff ID", "First Name", "Last Name", "Email", "Phone", "Branch", "Role", "Action"};
-        Object[][] data = {
-            {1, "STF1234567", "John", "Doe", "john.doe@gmail.com", "1234567890", "Branch 1", "Branch Manager", ""},
-            {2, "STF7654321", "Jane", "Smith", "jane.smith@gmail.com", "9876543210", "Branch 2", "Staff", ""}
-        };
+        
+        // Load staff data from database
+        java.util.List<nepxpress.model.Staff> staffList = new java.util.ArrayList<>();
+        try {
+            nepxpress.dao.StaffDAO staffDAO = new nepxpress.dao.StaffDAO();
+            staffList = staffDAO.getAllStaff();
+        } catch (Exception e) {
+            System.err.println("Error loading staff: " + e.getMessage());
+            e.printStackTrace();
+        }
+        
+        // Create data array for table
+        Object[][] data = new Object[staffList.size()][columnNames.length];
+        for (int i = 0; i < staffList.size(); i++) {
+            nepxpress.model.Staff staff = staffList.get(i);
+            data[i][0] = i + 1;  // Index
+            data[i][1] = staff.getStaffId();
+            data[i][2] = staff.getFirstName();
+            data[i][3] = staff.getLastName();
+            data[i][4] = staff.getEmail();
+            data[i][5] = staff.getPhone();
+            data[i][6] = staff.getBranchName();
+            data[i][7] = staff.getRole();
+            data[i][8] = "";  // Action column
+        }
         
         staffTableModel = new javax.swing.table.DefaultTableModel(data, columnNames) {
             @Override
@@ -817,7 +971,7 @@ public class Dashboard extends javax.swing.JFrame {
         footerPanel.setBorder(javax.swing.BorderFactory.createEmptyBorder(20, 30, 30, 30));
         
         // Add showing entries text
-        javax.swing.JLabel showingLabel = new javax.swing.JLabel("Showing 1 to " + data.length + " of " + data.length + " entries");
+        javax.swing.JLabel showingLabel = new javax.swing.JLabel("Showing 1 to " + staffList.size() + " of " + staffList.size() + " entries");
         footerPanel.add(showingLabel, java.awt.BorderLayout.WEST);
         
         // Add pagination
@@ -840,26 +994,6 @@ public class Dashboard extends javax.swing.JFrame {
         
         footerPanel.add(paginationPanel, java.awt.BorderLayout.EAST);
         
-        // Add search functionality
-        searchField.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
-            public void changedUpdate(javax.swing.event.DocumentEvent e) { search(); }
-            public void removeUpdate(javax.swing.event.DocumentEvent e) { search(); }
-            public void insertUpdate(javax.swing.event.DocumentEvent e) { search(); }
-
-            public void search() {
-                String searchText = searchField.getText().toLowerCase();
-                javax.swing.table.TableRowSorter<javax.swing.table.DefaultTableModel> sorter = 
-                    new javax.swing.table.TableRowSorter<>(staffTableModel);
-                staffTable.setRowSorter(sorter);
-                
-                if (searchText.length() == 0) {
-                    sorter.setRowFilter(null);
-                } else {
-                    sorter.setRowFilter(javax.swing.RowFilter.regexFilter("(?i)" + searchText));
-                }
-            }
-        });
-        
         // Create center panel
         javax.swing.JPanel centerPanel = new javax.swing.JPanel(new java.awt.BorderLayout());
         centerPanel.setBackground(java.awt.Color.WHITE);
@@ -873,7 +1007,7 @@ public class Dashboard extends javax.swing.JFrame {
         staffListContent.add(mainContent, java.awt.BorderLayout.CENTER);
         
         // Add staff list content to main content panel
-        contentPanel.add(staffListContent, "stafflist");
+        contentPanel.add(staffListContent, "staff");
     }
 
     private void setupParcelsContent() {
@@ -1115,7 +1249,8 @@ public class Dashboard extends javax.swing.JFrame {
         private final javax.swing.JButton deleteButton;
 
         public BranchActionColumnEditor() {
-            panel = new javax.swing.JPanel(new java.awt.FlowLayout(java.awt.FlowLayout.LEFT, 5, 0));
+            panel = new javax.swing.JPanel();
+            panel.setLayout(new java.awt.FlowLayout(java.awt.FlowLayout.CENTER, 5, 0));
             panel.setBackground(java.awt.Color.WHITE);
 
             editButton = new javax.swing.JButton("Edit");
@@ -1132,46 +1267,82 @@ public class Dashboard extends javax.swing.JFrame {
             deleteButton.setBorder(javax.swing.BorderFactory.createEmptyBorder(5, 10, 5, 10));
             deleteButton.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
 
-            editButton.addActionListener(new java.awt.event.ActionListener() {
-                public void actionPerformed(java.awt.event.ActionEvent e) {
+            editButton.addActionListener(e -> {
                     int row = branchTable.getSelectedRow();
                     if (row != -1) {
                         row = branchTable.convertRowIndexToModel(row);
                         showEditBranchDialog(row);
-                        fireEditingStopped();
                     }
-                }
+                fireEditingStopped();
             });
 
-            deleteButton.addActionListener(new java.awt.event.ActionListener() {
-                public void actionPerformed(java.awt.event.ActionEvent e) {
+            deleteButton.addActionListener(e -> {
                     int row = branchTable.getSelectedRow();
                     if (row != -1) {
                         row = branchTable.convertRowIndexToModel(row);
+                    
+                    // Get branch code from table model
+                    String branchCode = (String) branchTableModel.getValueAt(row, 1);
+                    
+                    // Confirm deletion
                         int confirm = javax.swing.JOptionPane.showConfirmDialog(
                             Dashboard.this,
                             "Are you sure you want to delete this branch?",
-                            "Confirm Delete",
+                        "Confirm Deletion",
                             javax.swing.JOptionPane.YES_NO_OPTION,
                             javax.swing.JOptionPane.WARNING_MESSAGE
                         );
                         
                         if (confirm == javax.swing.JOptionPane.YES_OPTION) {
+                        // Delete from database
+                        nepxpress.dao.BranchDAO branchDAO = new nepxpress.dao.BranchDAO();
+                        nepxpress.model.Branch branch = branchDAO.getBranchByCode(branchCode);
+                        
+                        if (branch != null) {
+                            boolean deleted = branchDAO.deleteBranch(branch.getId());
+                            
+                            if (deleted) {
+                                // Remove from table model
                             branchTableModel.removeRow(row);
+                                
                             // Update row numbers
                             for (int i = 0; i < branchTableModel.getRowCount(); i++) {
                                 branchTableModel.setValueAt(i + 1, i, 0);
                             }
+                                
                             javax.swing.JOptionPane.showMessageDialog(
                                 Dashboard.this,
                                 "Branch deleted successfully!",
                                 "Success",
                                 javax.swing.JOptionPane.INFORMATION_MESSAGE
                             );
+                            } else {
+                                javax.swing.JOptionPane.showMessageDialog(
+                                    Dashboard.this,
+                                    "Failed to delete branch. It may be in use.",
+                                    "Error",
+                                    javax.swing.JOptionPane.ERROR_MESSAGE
+                                );
+                            }
+                        } else {
+                            javax.swing.JOptionPane.showMessageDialog(
+                                Dashboard.this,
+                                "Branch not found in database.",
+                                "Error",
+                                javax.swing.JOptionPane.ERROR_MESSAGE
+                            );
+                            
+                            // Still remove from table if not in database
+                            branchTableModel.removeRow(row);
+                            
+                            // Update row numbers
+                            for (int i = 0; i < branchTableModel.getRowCount(); i++) {
+                                branchTableModel.setValueAt(i + 1, i, 0);
+                            }
                         }
-                        fireEditingStopped();
                     }
                 }
+                fireEditingStopped();
             });
 
             panel.add(editButton);
@@ -1323,7 +1494,7 @@ public class Dashboard extends javax.swing.JFrame {
 
     private void showAddBranchDialog() {
         // Create the dialog
-        javax.swing.JDialog dialog = new javax.swing.JDialog(Dashboard.this, "Add New Branch", true);
+        javax.swing.JDialog dialog = new javax.swing.JDialog(this, "Add New Branch", true);
         dialog.setLayout(new java.awt.BorderLayout());
         
         // Create main panel
@@ -1338,10 +1509,30 @@ public class Dashboard extends javax.swing.JFrame {
         gbc.insets = new java.awt.Insets(5, 5, 5, 5);
         
         // Add form fields
-        String[] labels = {"Street/Building/Brgy:", "City:", "State/Province:", "ZIP Code:", "Country:", "Contact Number:"};
+        String[] labels = {
+            "Branch Code:", 
+            "Branch Name:", 
+            "Location:", 
+            "Contact Number:", 
+            "Email:"
+        };
+        
         javax.swing.JTextField[] fields = new javax.swing.JTextField[labels.length];
         
-        for (int i = 0; i < labels.length; i++) {
+        // Branch Code (auto-generated and disabled)
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        mainPanel.add(new javax.swing.JLabel(labels[0]), gbc);
+        
+        gbc.gridx = 1;
+        gbc.fill = java.awt.GridBagConstraints.HORIZONTAL;
+        gbc.weightx = 1.0;
+        fields[0] = new javax.swing.JTextField(generateBranchCode());
+        fields[0].setEnabled(false);
+        mainPanel.add(fields[0], gbc);
+        
+        // Other text fields
+        for (int i = 1; i < labels.length; i++) {
             gbc.gridx = 0;
             gbc.gridy = i;
             mainPanel.add(new javax.swing.JLabel(labels[i]), gbc);
@@ -1359,53 +1550,80 @@ public class Dashboard extends javax.swing.JFrame {
         javax.swing.JButton saveButton = new javax.swing.JButton("Save");
         saveButton.setBackground(new java.awt.Color(0, 123, 255));
         saveButton.setForeground(java.awt.Color.WHITE);
+        saveButton.setBorder(javax.swing.BorderFactory.createEmptyBorder(5, 10, 5, 10));
+        saveButton.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
         saveButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                // Validate fields
-                for (int i = 1; i < fields.length; i++) {  // Skip branch code
-                    String value = fields[i].getText().trim();
-                    if (value.isEmpty()) {
+                // Validate input
+                if (fields[1].getText().isEmpty()) {
                         javax.swing.JOptionPane.showMessageDialog(dialog,
-                            "All fields are required.",
+                        "Branch name is required",
                             "Validation Error",
                             javax.swing.JOptionPane.ERROR_MESSAGE);
                         return;
                     }
-                }
-
-                // Validate phone number
-                String phone = fields[5].getText().trim();
-                if (!validatePhoneNumber(phone)) {
+                
+                if (fields[2].getText().isEmpty()) {
                     javax.swing.JOptionPane.showMessageDialog(dialog,
-                        "Contact number must be exactly 10 digits.",
+                        "Location is required",
                         "Validation Error",
                         javax.swing.JOptionPane.ERROR_MESSAGE);
                     return;
                 }
                 
-                // Generate branch code
-                String branchCode = generateBranchCode();
+                if (fields[3].getText().isEmpty()) {
+                    javax.swing.JOptionPane.showMessageDialog(dialog,
+                        "Contact number is required",
+                        "Validation Error",
+                        javax.swing.JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
                 
-                // Add new row to table
+                if (fields[4].getText().isEmpty() || !fields[4].getText().contains("@")) {
+                    javax.swing.JOptionPane.showMessageDialog(dialog,
+                        "Please enter a valid email address",
+                        "Validation Error",
+                        javax.swing.JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+                
+                // Create Branch object
+                nepxpress.model.Branch branch = new nepxpress.model.Branch();
+                branch.setBranchCode(fields[0].getText());
+                branch.setBranchName(fields[1].getText());
+                branch.setLocation(fields[2].getText());
+                branch.setContactNumber(fields[3].getText());
+                branch.setEmail(fields[4].getText());
+                
+                // Save to database
+                nepxpress.dao.BranchDAO branchDAO = new nepxpress.dao.BranchDAO();
+                int branchId = branchDAO.insertBranch(branch);
+                
+                if (branchId > 0) {
+                    // Add to table model
                 Object[] rowData = {
                     branchTableModel.getRowCount() + 1,
-                    branchCode,
-                    fields[0].getText(),
-                    fields[1].getText() + ", " + fields[2].getText() + ", " + fields[3].getText(),
-                    fields[4].getText(),
-                    fields[5].getText(),
-                    ""
+                        fields[0].getText(), // Branch Code
+                        fields[1].getText(), // Branch Name
+                        fields[2].getText(), // Location
+                        fields[3].getText(), // Contact Number
+                        fields[4].getText(), // Email
+                        "" // Action column
                 };
                 branchTableModel.addRow(rowData);
                 
-                // Close dialog
-                dialog.dispose();
-                
-                // Show success message
-                javax.swing.JOptionPane.showMessageDialog(Dashboard.this,
+                    // Show success message and close dialog
+                    javax.swing.JOptionPane.showMessageDialog(dialog,
                     "Branch added successfully!",
                     "Success",
                     javax.swing.JOptionPane.INFORMATION_MESSAGE);
+                    dialog.dispose();
+                } else {
+                    javax.swing.JOptionPane.showMessageDialog(dialog,
+                        "Failed to add branch. Please try again.",
+                        "Error",
+                        javax.swing.JOptionPane.ERROR_MESSAGE);
+                }
             }
         });
         
@@ -1426,7 +1644,6 @@ public class Dashboard extends javax.swing.JFrame {
         // Set dialog properties
         dialog.pack();
         dialog.setLocationRelativeTo(this);
-        dialog.setResizable(false);
         dialog.setVisible(true);
     }
 
@@ -1839,9 +2056,9 @@ public class Dashboard extends javax.swing.JFrame {
         private final javax.swing.JButton deleteButton;
 
         public StaffActionColumnEditor() {
-            super(new javax.swing.JCheckBox());
-            
-            panel = new javax.swing.JPanel(new java.awt.FlowLayout(java.awt.FlowLayout.LEFT, 5, 0));
+            super(new javax.swing.JTextField());
+            panel = new javax.swing.JPanel();
+            panel.setLayout(new java.awt.FlowLayout(java.awt.FlowLayout.CENTER, 5, 0));
             panel.setBackground(java.awt.Color.WHITE);
 
             editButton = new javax.swing.JButton("Edit");
@@ -1850,15 +2067,6 @@ public class Dashboard extends javax.swing.JFrame {
             editButton.setForeground(java.awt.Color.WHITE);
             editButton.setBorder(javax.swing.BorderFactory.createEmptyBorder(5, 10, 5, 10));
             editButton.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
-            editButton.addActionListener(new java.awt.event.ActionListener() {
-                public void actionPerformed(java.awt.event.ActionEvent evt) {
-                    int row = staffTable.getSelectedRow();
-                    if (row != -1) {
-                        showEditStaffDialog(row);
-                    }
-                    fireEditingStopped();
-                }
-            });
 
             deleteButton = new javax.swing.JButton("Delete");
             deleteButton.setFont(new java.awt.Font("Segoe UI", java.awt.Font.PLAIN, 12));
@@ -1866,32 +2074,89 @@ public class Dashboard extends javax.swing.JFrame {
             deleteButton.setForeground(java.awt.Color.WHITE);
             deleteButton.setBorder(javax.swing.BorderFactory.createEmptyBorder(5, 10, 5, 10));
             deleteButton.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
-            deleteButton.addActionListener(new java.awt.event.ActionListener() {
-                public void actionPerformed(java.awt.event.ActionEvent evt) {
+            
+            editButton.addActionListener(e -> {
                     int row = staffTable.getSelectedRow();
                     if (row != -1) {
+                    row = staffTable.convertRowIndexToModel(row);
+                    showEditStaffDialog(row);
+                }
+                fireEditingStopped();
+            });
+            
+            deleteButton.addActionListener(e -> {
+                int row = staffTable.getSelectedRow();
+                if (row != -1) {
+                    row = staffTable.convertRowIndexToModel(row);
+                    
+                    // Get staff ID from table model
+                    String staffId = (String) staffTableModel.getValueAt(row, 1);
+                    
+                    // Confirm deletion
                         int confirm = javax.swing.JOptionPane.showConfirmDialog(
                             Dashboard.this,
                             "Are you sure you want to delete this staff member?",
-                            "Confirm Delete",
+                        "Confirm Deletion",
                             javax.swing.JOptionPane.YES_NO_OPTION,
                             javax.swing.JOptionPane.WARNING_MESSAGE
                         );
                         
                         if (confirm == javax.swing.JOptionPane.YES_OPTION) {
+                        // Delete from database
+                        nepxpress.dao.StaffDAO staffDAO = new nepxpress.dao.StaffDAO();
+                        nepxpress.model.Staff staff = staffDAO.getStaffByStaffId(staffId);
+                        
+                        if (staff != null) {
+                            boolean deleted = staffDAO.deleteStaff(staff.getId());
+                            
+                            if (deleted) {
+                                // Remove from table model
                             staffTableModel.removeRow(row);
+                                
+                            // Update row numbers
+                            for (int i = 0; i < staffTableModel.getRowCount(); i++) {
+                                staffTableModel.setValueAt(i + 1, i, 0);
+                            }
+                                
+                                javax.swing.JOptionPane.showMessageDialog(
+                                    Dashboard.this,
+                                    "Staff member deleted successfully!",
+                                    "Success",
+                                    javax.swing.JOptionPane.INFORMATION_MESSAGE
+                                );
+                            } else {
+                                javax.swing.JOptionPane.showMessageDialog(
+                                    Dashboard.this,
+                                    "Failed to delete staff member.",
+                                    "Error",
+                                    javax.swing.JOptionPane.ERROR_MESSAGE
+                                );
+                            }
+                        } else {
+                            javax.swing.JOptionPane.showMessageDialog(
+                                Dashboard.this,
+                                "Staff member not found in database.",
+                                "Error",
+                                javax.swing.JOptionPane.ERROR_MESSAGE
+                            );
+                            
+                            // Still remove from table if not in database
+                            staffTableModel.removeRow(row);
+                            
                             // Update row numbers
                             for (int i = 0; i < staffTableModel.getRowCount(); i++) {
                                 staffTableModel.setValueAt(i + 1, i, 0);
                             }
                         }
                     }
-                    fireEditingStopped();
                 }
+                fireEditingStopped();
             });
 
             panel.add(editButton);
             panel.add(deleteButton);
+            
+            setClickCountToStart(1);
         }
 
         @Override
@@ -2086,7 +2351,7 @@ public class Dashboard extends javax.swing.JFrame {
             "Role:"
         };
         
-        javax.swing.JTextField[] fields = new javax.swing.JTextField[labels.length - 1]; // Excluding Role which will be a combo box
+        javax.swing.JTextField[] fields = new javax.swing.JTextField[labels.length - 2]; // Excluding Branch and Role which will be combo boxes
         
         // Staff ID (auto-generated and disabled)
         gbc.gridx = 0;
@@ -2096,12 +2361,17 @@ public class Dashboard extends javax.swing.JFrame {
         gbc.gridx = 1;
         gbc.fill = java.awt.GridBagConstraints.HORIZONTAL;
         gbc.weightx = 1.0;
-        fields[0] = new javax.swing.JTextField(generateStaffId());
+        
+        // Generate staff ID using StaffDAO
+        nepxpress.dao.StaffDAO staffDAO = new nepxpress.dao.StaffDAO();
+        String staffId = staffDAO.generateStaffId();
+        
+        fields[0] = new javax.swing.JTextField(staffId);
         fields[0].setEnabled(false);
         mainPanel.add(fields[0], gbc);
         
         // Other text fields
-        for (int i = 1; i < labels.length - 1; i++) {
+        for (int i = 1; i < labels.length - 2; i++) {
             gbc.gridx = 0;
             gbc.gridy = i;
             mainPanel.add(new javax.swing.JLabel(labels[i]), gbc);
@@ -2112,6 +2382,24 @@ public class Dashboard extends javax.swing.JFrame {
             fields[i] = new javax.swing.JTextField(20);
             mainPanel.add(fields[i], gbc);
         }
+        
+        // Branch combo box
+        gbc.gridx = 0;
+        gbc.gridy = labels.length - 2;
+        mainPanel.add(new javax.swing.JLabel(labels[labels.length - 2]), gbc);
+        
+        gbc.gridx = 1;
+        
+        // Get branches from database
+        nepxpress.dao.BranchDAO branchDAO = new nepxpress.dao.BranchDAO();
+        java.util.List<nepxpress.model.Branch> branches = branchDAO.getActiveBranches();
+        
+        // Create branch combo box
+        javax.swing.JComboBox<nepxpress.model.Branch> branchCombo = new javax.swing.JComboBox<>();
+        for (nepxpress.model.Branch branch : branches) {
+            branchCombo.addItem(branch);
+        }
+        mainPanel.add(branchCombo, gbc);
         
         // Role combo box
         gbc.gridx = 0;
@@ -2129,41 +2417,80 @@ public class Dashboard extends javax.swing.JFrame {
         javax.swing.JButton saveButton = new javax.swing.JButton("Save");
         saveButton.setBackground(new java.awt.Color(0, 123, 255));
         saveButton.setForeground(java.awt.Color.WHITE);
+        saveButton.setBorder(javax.swing.BorderFactory.createEmptyBorder(5, 10, 5, 10));
+        saveButton.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
         saveButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                // Validate fields
-                for (int i = 1; i < fields.length; i++) {  // Skip staff ID
-                    String value = fields[i].getText().trim();
-                    if (value.isEmpty()) {
+                // Validate input
+                if (fields[1].getText().isEmpty()) {
                         javax.swing.JOptionPane.showMessageDialog(dialog,
-                            "All fields are required.",
+                        "First name is required",
                             "Validation Error",
                             javax.swing.JOptionPane.ERROR_MESSAGE);
                         return;
                     }
-                }
                 
-                // Validate email
-                String email = fields[3].getText().trim();
-                if (!validateEmail(email)) {
+                if (fields[2].getText().isEmpty()) {
                     javax.swing.JOptionPane.showMessageDialog(dialog,
-                        "Please enter a valid Gmail address.",
+                        "Last name is required",
                         "Validation Error",
                         javax.swing.JOptionPane.ERROR_MESSAGE);
                     return;
                 }
                 
-                // Validate phone number
-                String phone = fields[4].getText().trim();
-                if (!validatePhoneNumber(phone)) {
+                if (fields[3].getText().isEmpty() || !validateEmail(fields[3].getText())) {
                     javax.swing.JOptionPane.showMessageDialog(dialog,
-                        "Please enter a valid 10-digit phone number.",
+                        "Please enter a valid email address",
                         "Validation Error",
                         javax.swing.JOptionPane.ERROR_MESSAGE);
                     return;
                 }
                 
-                // Add new row to staff table
+                if (fields[4].getText().isEmpty() || !validatePhoneNumber(fields[4].getText())) {
+                    javax.swing.JOptionPane.showMessageDialog(dialog,
+                        "Please enter a valid phone number",
+                        "Validation Error",
+                        javax.swing.JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+                
+                if (branchCombo.getSelectedItem() == null) {
+                    javax.swing.JOptionPane.showMessageDialog(dialog,
+                        "Please select a branch",
+                        "Validation Error",
+                        javax.swing.JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+                
+                // Check if email already exists
+                if (staffDAO.isEmailExists(fields[3].getText(), null)) {
+                    javax.swing.JOptionPane.showMessageDialog(dialog,
+                        "Email already exists. Please use a different email.",
+                        "Validation Error",
+                        javax.swing.JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+                
+                // Create Staff object
+                nepxpress.model.Staff staff = new nepxpress.model.Staff();
+                staff.setStaffId(fields[0].getText());
+                staff.setFirstName(fields[1].getText());
+                staff.setLastName(fields[2].getText());
+                staff.setEmail(fields[3].getText());
+                staff.setPhone(fields[4].getText());
+                
+                // Get selected branch
+                nepxpress.model.Branch selectedBranch = (nepxpress.model.Branch) branchCombo.getSelectedItem();
+                staff.setBranchId(selectedBranch.getId());
+                staff.setBranchName(selectedBranch.getBranchName());
+                
+                staff.setRole((String) roleCombo.getSelectedItem());
+                
+                // Save to database
+                int staffId = staffDAO.insertStaff(staff);
+                
+                if (staffId > 0) {
+                    // Add to table model
                 Object[] rowData = {
                     staffTableModel.getRowCount() + 1,
                     fields[0].getText(), // Staff ID
@@ -2171,7 +2498,7 @@ public class Dashboard extends javax.swing.JFrame {
                     fields[2].getText(), // Last Name
                     fields[3].getText(), // Email
                     fields[4].getText(), // Phone
-                    fields[5].getText(), // Branch
+                        selectedBranch.getBranchName(), // Branch
                     roleCombo.getSelectedItem(), // Role
                     "" // Action column
                 };
@@ -2183,6 +2510,12 @@ public class Dashboard extends javax.swing.JFrame {
                     "Success",
                     javax.swing.JOptionPane.INFORMATION_MESSAGE);
                 dialog.dispose();
+                } else {
+                    javax.swing.JOptionPane.showMessageDialog(dialog,
+                        "Failed to add staff member. Please try again.",
+                        "Error",
+                        javax.swing.JOptionPane.ERROR_MESSAGE);
+                }
             }
         });
         
@@ -2206,127 +2539,72 @@ public class Dashboard extends javax.swing.JFrame {
         dialog.setVisible(true);
     }
 
-    private String generateStaffId() {
-        String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-        StringBuilder id = new StringBuilder("STF");
-        java.util.Random rnd = new java.util.Random();
-        for (int i = 0; i < 7; i++) {
-            id.append(chars.charAt(rnd.nextInt(chars.length())));
-        }
-        return id.toString();
-    }
-
     private void setupTrackParcelsContent() {
-        // Create track parcels panel
-        javax.swing.JPanel trackParcelsContent = new javax.swing.JPanel();
-        trackParcelsContent.setLayout(new java.awt.BorderLayout(0, 0));
+        trackParcelsContent = new javax.swing.JPanel();
+        trackParcelsContent.setLayout(new java.awt.BorderLayout());
         trackParcelsContent.setBackground(java.awt.Color.WHITE);
-        
-        // Create main content panel
-        javax.swing.JPanel mainContent = new javax.swing.JPanel();
-        mainContent.setLayout(new java.awt.BorderLayout());
-        mainContent.setBackground(java.awt.Color.WHITE);
-        mainContent.setBorder(javax.swing.BorderFactory.createEmptyBorder(30, 0, 0, 0));
 
-        // Add title panel
-        javax.swing.JPanel titlePanel = new javax.swing.JPanel(new java.awt.FlowLayout(java.awt.FlowLayout.LEFT, 0, 0));
-        titlePanel.setBackground(java.awt.Color.WHITE);
-        javax.swing.JLabel titleLabel = new javax.swing.JLabel("Track Parcels");
-        titleLabel.setFont(new java.awt.Font("Segoe UI", java.awt.Font.PLAIN, 32));
-        titlePanel.add(titleLabel);
-        titlePanel.setBorder(javax.swing.BorderFactory.createCompoundBorder(
-            javax.swing.BorderFactory.createMatteBorder(0, 0, 1, 0, new java.awt.Color(200, 200, 200)),
-            javax.swing.BorderFactory.createEmptyBorder(20, 30, 10, 30)
+        // Centered panel
+        JPanel centerPanel = new JPanel(new GridBagLayout());
+        centerPanel.setBackground(Color.WHITE);
+
+        // Box panel
+        JPanel boxPanel = new JPanel(new GridBagLayout());
+        boxPanel.setBackground(Color.WHITE);
+        boxPanel.setBorder(javax.swing.BorderFactory.createCompoundBorder(
+            javax.swing.BorderFactory.createLineBorder(new Color(200, 200, 200)),
+            javax.swing.BorderFactory.createEmptyBorder(30, 30, 30, 30)
         ));
-        
-        // Create search panel
-        javax.swing.JPanel searchPanel = new javax.swing.JPanel();
-        searchPanel.setLayout(new javax.swing.BoxLayout(searchPanel, javax.swing.BoxLayout.Y_AXIS));
-        searchPanel.setBackground(java.awt.Color.WHITE);
-        searchPanel.setBorder(javax.swing.BorderFactory.createEmptyBorder(50, 0, 0, 0));
-        
-        // Create label panel
-        javax.swing.JPanel labelPanel = new javax.swing.JPanel();
-        labelPanel.setLayout(new java.awt.FlowLayout(java.awt.FlowLayout.CENTER, 0, 0));
-        labelPanel.setBackground(java.awt.Color.WHITE);
-        labelPanel.setMaximumSize(new java.awt.Dimension(400, 30));
-        javax.swing.JLabel trackingLabel = new javax.swing.JLabel("Enter Tracking Number");
-        trackingLabel.setFont(new java.awt.Font("Segoe UI", java.awt.Font.PLAIN, 16));
-        labelPanel.add(trackingLabel);
-        
-        // Create search field panel
-        javax.swing.JPanel searchFieldPanel = new javax.swing.JPanel();
-        searchFieldPanel.setLayout(new java.awt.FlowLayout(java.awt.FlowLayout.CENTER, 5, 0));
-        searchFieldPanel.setBackground(java.awt.Color.WHITE);
-        searchFieldPanel.setBorder(javax.swing.BorderFactory.createEmptyBorder(10, 0, 0, 0));
-        searchFieldPanel.setMaximumSize(new java.awt.Dimension(400, 45));
-        
-        // Create search field
-        javax.swing.JTextField searchField = new javax.swing.JTextField(20);
-        searchField.setPreferredSize(new java.awt.Dimension(350, 35));
-        searchField.setBorder(javax.swing.BorderFactory.createCompoundBorder(
-            javax.swing.BorderFactory.createLineBorder(new java.awt.Color(200, 200, 200)),
-            javax.swing.BorderFactory.createEmptyBorder(5, 10, 5, 10)
-        ));
-        searchField.setFont(new java.awt.Font("Segoe UI", java.awt.Font.PLAIN, 14));
-        
-        // Create search button
-        javax.swing.JButton searchButton = new javax.swing.JButton();
-        searchButton.setPreferredSize(new java.awt.Dimension(35, 35));
-        searchButton.setBackground(new java.awt.Color(0, 123, 255));
-        searchButton.setBorder(null);
-        searchButton.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
-        
-        // Load and set the search icon
+
+        JLabel label = new JLabel("Enter Tracking Number");
+        label.setFont(new Font("Arial", Font.BOLD, 18));
+        JTextField trackingField = new JTextField(18);
+        JButton searchButton = new JButton();
+        searchButton.setPreferredSize(new Dimension(40, 30));
+        searchButton.setBackground(new Color(33, 150, 243));
+        // Set a search icon if available
         try {
             javax.swing.ImageIcon originalIcon = new javax.swing.ImageIcon(getClass().getResource("/icons/search.png"));
-            java.awt.Image scaledImage = originalIcon.getImage().getScaledInstance(20, 20, java.awt.Image.SCALE_SMOOTH);
+            java.awt.Image scaledImage = originalIcon.getImage().getScaledInstance(18, 18, java.awt.Image.SCALE_SMOOTH);
             searchButton.setIcon(new javax.swing.ImageIcon(scaledImage));
         } catch (Exception e) {
-            System.err.println("Error loading search icon: " + e.getMessage());
-            searchButton.setText("🔍");
-            searchButton.setForeground(java.awt.Color.WHITE);
+            searchButton.setText("\uD83D\uDD0D"); // Unicode magnifier fallback
         }
-        
-        // Add action listener to search button
-        searchButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                String trackingNumber = searchField.getText().trim();
-                if (trackingNumber.isEmpty()) {
-                    javax.swing.JOptionPane.showMessageDialog(
-                        Dashboard.this,
-                        "Please enter a tracking number.",
-                        "Validation Error",
-                        javax.swing.JOptionPane.ERROR_MESSAGE
-                    );
-                    return;
-                }
-                showTrackingResult(trackingNumber);
+
+        // Add ActionListener to show parcel details
+        searchButton.addActionListener(e -> {
+            String trackingNumber = trackingField.getText().trim();
+            if (trackingNumber.isEmpty()) {
+                JOptionPane.showMessageDialog(trackParcelsContent, "Please enter a tracking number.", "Error", JOptionPane.WARNING_MESSAGE);
+                return;
             }
+            // TODO: Replace with actual database lookup
+            String details = "Parcel Details for: " + trackingNumber + "\nStatus: In Transit\nSender: John Doe\nRecipient: Jane Smith";
+            JOptionPane.showMessageDialog(trackParcelsContent, details, "Parcel Details", JOptionPane.INFORMATION_MESSAGE);
         });
-        
-        // Add components to search field panel
-        searchFieldPanel.add(searchField);
-        searchFieldPanel.add(searchButton);
-        
-        // Add components to search panel
-        searchPanel.add(labelPanel);
-        searchPanel.add(searchFieldPanel);
-        
-        // Center the search panel
-        javax.swing.JPanel centerPanel = new javax.swing.JPanel(new java.awt.BorderLayout());
-        centerPanel.setBackground(java.awt.Color.WHITE);
-        centerPanel.add(searchPanel, java.awt.BorderLayout.CENTER);
-        
-        // Add components to main content
-        mainContent.add(titlePanel, java.awt.BorderLayout.NORTH);
-        mainContent.add(centerPanel, java.awt.BorderLayout.CENTER);
-        
-        // Add main content to track parcels panel
-        trackParcelsContent.add(mainContent);
-        
-        // Add to content panel with card name
-        contentPanel.add(trackParcelsContent, "trackparcels");
+
+        // Add components to boxPanel
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(0, 10, 0, 10);
+        gbc.gridx = 0; gbc.gridy = 0;
+        boxPanel.add(label, gbc);
+        gbc.gridx = 1;
+        boxPanel.add(trackingField, gbc);
+        gbc.gridx = 2;
+        boxPanel.add(searchButton, gbc);
+
+        // Center the boxPanel in centerPanel
+        centerPanel.add(boxPanel);
+
+        // Add to main content
+        trackParcelsContent.removeAll();
+        trackParcelsContent.add(centerPanel, BorderLayout.CENTER);
+        trackParcelsContent.revalidate();
+        trackParcelsContent.repaint();
+        // Add to card layout if not already
+        if (contentPanel != null) {
+            contentPanel.add(trackParcelsContent, "trackparcels");
+        }
     }
 
     private void showTrackingResult(String trackingNumber) {
@@ -2435,5 +2713,436 @@ public class Dashboard extends javax.swing.JFrame {
         dialog.setSize(500, 400);
         dialog.setLocationRelativeTo(this);
         dialog.setVisible(true);
+    }
+
+    // Helper method to create consistent sidebar buttons
+    private javax.swing.JButton createSidebarButton(String text, java.awt.Color defaultColor, java.awt.Color hoverColor, java.awt.Color activeColor) {
+        javax.swing.JButton button = new javax.swing.JButton(text);
+        button.setForeground(java.awt.Color.WHITE);
+        button.setBackground(defaultColor);
+        button.setFont(new java.awt.Font("Arial", java.awt.Font.PLAIN, 16));
+        button.setBorderPainted(false);
+        button.setFocusPainted(false);
+        button.setAlignmentX(java.awt.Component.LEFT_ALIGNMENT);
+        button.setMaximumSize(new java.awt.Dimension(250, 50));
+        button.setPreferredSize(new java.awt.Dimension(250, 50));
+        
+        // Custom styling with left padding (30px by default, will be adjusted for Staff)
+        button.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
+        
+        // Set consistent padding for all buttons
+        button.setBorder(javax.swing.BorderFactory.createEmptyBorder(10, 30, 10, 0));
+        
+        // Hover effect
+        button.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseEntered(java.awt.event.MouseEvent e) {
+                if (button.getBackground() != activeColor) {
+                    button.setBackground(hoverColor);
+                }
+            }
+
+            @Override
+            public void mouseExited(java.awt.event.MouseEvent e) {
+                if (button.getBackground() != activeColor) {
+                    button.setBackground(defaultColor);
+                }
+            }
+        });
+        
+        // Special handling for Branch Staff button
+        if (text.equals("Branch") || text.equals("Branch Staff")) {
+            // Change button text to Branch Staff
+            button.setText("Branch Staff");
+            
+            // Create a custom dropdown arrow icon
+            javax.swing.Icon dropdownIcon = new javax.swing.Icon() {
+                @Override
+                public void paintIcon(java.awt.Component c, java.awt.Graphics g, int x, int y) {
+                    java.awt.Graphics2D g2d = (java.awt.Graphics2D) g.create();
+                    g2d.setRenderingHint(java.awt.RenderingHints.KEY_ANTIALIASING, 
+                                         java.awt.RenderingHints.VALUE_ANTIALIAS_ON);
+                    g2d.setColor(java.awt.Color.WHITE);
+                    int[] xPoints = {x, x + 8, x + 4};
+                    int[] yPoints = {y, y, y + 4};
+                    g2d.fillPolygon(xPoints, yPoints, 3);
+                    g2d.dispose();
+                }
+                
+                @Override
+                public int getIconWidth() {
+                    return 8;
+                }
+                
+                @Override
+                public int getIconHeight() {
+                    return 4;
+                }
+            };
+            
+                         // Add the dropdown icon
+             button.setIcon(dropdownIcon);
+             button.setIconTextGap(8);
+             button.setHorizontalTextPosition(javax.swing.SwingConstants.LEFT);
+            
+            // Create popup menu for Branch Staff options
+            javax.swing.JPopupMenu branchMenu = new javax.swing.JPopupMenu();
+            branchMenu.setBackground(new java.awt.Color(16, 42, 67));
+            branchMenu.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(45, 85, 115), 1));
+            
+            // Create menu items with custom styling
+            javax.swing.JMenuItem addNewItem = createMenuItem("Add New", new java.awt.Color(28, 66, 98), new java.awt.Color(40, 90, 130));
+            javax.swing.JMenuItem listAllItem = createMenuItem("List All", new java.awt.Color(28, 66, 98), new java.awt.Color(40, 90, 130));
+            
+            // Add arrow indicators to menu items
+            addNewItem.setIcon(createArrowIcon());
+            listAllItem.setIcon(createArrowIcon());
+            
+            // Add action listeners to the menu items
+            addNewItem.addActionListener(e -> {
+                showAddBranchDialog();
+            });
+            
+            listAllItem.addActionListener(e -> {
+                ((java.awt.CardLayout) contentPanel.getLayout()).show(contentPanel, "branch");
+            });
+            
+            // Add items to the popup menu
+            branchMenu.add(addNewItem);
+            branchMenu.add(listAllItem);
+            
+            // Show popup menu when button is clicked
+            button.addActionListener(e -> {
+                branchMenu.show(button, 0, button.getHeight());
+            });
+            
+            return button;
+        }
+        
+        // Click handler for other buttons
+        button.addActionListener(new java.awt.event.ActionListener() {
+            @Override
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                // Set all buttons to default color
+                dashboardButton.setBackground(defaultColor);
+                branchButton.setBackground(defaultColor);
+                staffButton.setBackground(defaultColor);
+                parcelsButton.setBackground(defaultColor);
+                trackparcelsButton.setBackground(defaultColor);
+                
+                // Set clicked button to active color
+                button.setBackground(activeColor);
+                
+                // Show appropriate panel
+                if (button == dashboardButton) {
+                    // Show dashboard content
+                    ((java.awt.CardLayout) contentPanel.getLayout()).show(contentPanel, "dashboard");
+                    
+                    // Ensure content is visible
+                    dashboardContent.revalidate();
+                    dashboardContent.repaint();
+                    contentPanel.revalidate();
+                    contentPanel.repaint();
+                } else if (button == staffButton) {
+                    // Either show staff list or add new staff
+                    int choice = javax.swing.JOptionPane.showOptionDialog(
+                        Dashboard.this,
+                        "Staff Management",
+                        "Choose an option",
+                        javax.swing.JOptionPane.YES_NO_OPTION,
+                        javax.swing.JOptionPane.QUESTION_MESSAGE,
+                        null,
+                        new String[] {"List All Staff", "Add New Staff"},
+                        "List All Staff"
+                    );
+                    
+                    if (choice == 0) {
+                        // Show staff list
+                        ((java.awt.CardLayout) contentPanel.getLayout()).show(contentPanel, "stafflist");
+                    } else if (choice == 1) {
+                        // Show add staff dialog
+                        showAddStaffDialog();
+                    }
+                } else if (button == parcelsButton) {
+                    ((java.awt.CardLayout) contentPanel.getLayout()).show(contentPanel, "parcels");
+                } else if (button == trackparcelsButton) {
+                    // Use a darker highlight color for Track Parcels to match image
+                    button.setBackground(new java.awt.Color(30, 57, 76));
+                    // Show track parcels panel
+                    ((java.awt.CardLayout) contentPanel.getLayout()).show(contentPanel, "trackparcels");
+                }
+            }
+        });
+        
+        return button;
+    }
+    
+    private javax.swing.JMenuItem createMenuItem(String text, java.awt.Color defaultColor, java.awt.Color hoverColor) {
+        javax.swing.JMenuItem menuItem = new javax.swing.JMenuItem(text);
+        menuItem.setFont(new java.awt.Font("Arial", java.awt.Font.PLAIN, 16));
+        menuItem.setForeground(java.awt.Color.WHITE);
+        menuItem.setBackground(defaultColor);
+        menuItem.setBorder(javax.swing.BorderFactory.createEmptyBorder(12, 30, 12, 25));
+        menuItem.setIconTextGap(10);
+        menuItem.setHorizontalTextPosition(javax.swing.SwingConstants.RIGHT);
+        
+        // Add hover effect
+        menuItem.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseEntered(java.awt.event.MouseEvent e) {
+                menuItem.setBackground(hoverColor);
+            }
+            
+            @Override
+            public void mouseExited(java.awt.event.MouseEvent e) {
+                menuItem.setBackground(defaultColor);
+            }
+        });
+        
+        return menuItem;
+    }
+
+    private javax.swing.Icon createArrowIcon() {
+        return new javax.swing.Icon() {
+            @Override
+            public void paintIcon(java.awt.Component c, java.awt.Graphics g, int x, int y) {
+                java.awt.Graphics2D g2d = (java.awt.Graphics2D) g.create();
+                g2d.setRenderingHint(java.awt.RenderingHints.KEY_ANTIALIASING, 
+                                    java.awt.RenderingHints.VALUE_ANTIALIAS_ON);
+                g2d.setColor(java.awt.Color.WHITE);
+                int[] xPoints = {x, x, x + 4};
+                int[] yPoints = {y, y + 8, y + 4};
+                g2d.fillPolygon(xPoints, yPoints, 3);
+                g2d.dispose();
+            }
+            
+            @Override
+            public int getIconWidth() {
+                return 4;
+            }
+            
+            @Override
+            public int getIconHeight() {
+                return 8;
+            }
+        };
+    }
+
+    // Main method to run the Dashboard directly
+    public static void main(String[] args) {
+        try {
+            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
+                if ("Nimbus".equals(info.getName())) {
+                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
+                    break;
+                }
+            }
+        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | javax.swing.UnsupportedLookAndFeelException ex) {
+            java.util.logging.Logger.getLogger(Dashboard.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        }
+        
+        java.awt.EventQueue.invokeLater(() -> {
+            Dashboard dashboard = new Dashboard();
+            dashboard.setVisible(true);
+        });
+    }
+
+    // Add rider approval panel method
+    // Helper method to update the main content panel
+    // Helper to highlight the active sidebar button
+    private void highlightSidebarButton(javax.swing.JButton activeButton) {
+        java.awt.Color primaryColor = new java.awt.Color(16, 42, 67);
+        java.awt.Color activeColor = new java.awt.Color(40, 90, 130);
+        dashboardButton.setBackground(primaryColor);
+        branchButton.setBackground(primaryColor);
+        staffButton.setBackground(primaryColor);
+        parcelsButton.setBackground(primaryColor);
+        trackparcelsButton.setBackground(primaryColor);
+        riderApprovalButton.setBackground(primaryColor);
+        if (activeButton != null) activeButton.setBackground(activeColor);
+    }
+
+    // Helper to switch main panel via CardLayout
+    private void switchMainPanel(String cardName, javax.swing.JButton activeButton) {
+        // First, reset all buttons to default style
+        java.awt.CardLayout cardLayout = (java.awt.CardLayout) contentPanel.getLayout();
+        
+        // Switch to the selected panel
+        cardLayout.show(contentPanel, cardName);
+        
+        // Highlight the active button
+        highlightSidebarButton(activeButton);
+    }
+    
+    // Persistent panel for Rider Approvals
+    private JPanel riderApprovalContent;
+    private void showRiderApprovalPanel() {
+        // Only update content, do not recreate panel or re-add to CardLayout
+        riderApprovalContent.removeAll();
+        riderApprovalContent.setLayout(new BorderLayout());
+        riderApprovalContent.setBackground(Color.WHITE);
+        riderApprovalContent.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+
+        // Add title
+        JLabel titleLabel = new JLabel("Rider Registration Approvals");
+        titleLabel.setFont(new Font("Arial", Font.BOLD, 24));
+        titleLabel.setBorder(BorderFactory.createEmptyBorder(0, 0, 20, 0));
+        riderApprovalContent.add(titleLabel, BorderLayout.NORTH);
+
+        // Fetch pending rider registrations
+        RiderDAO riderDAO = new RiderDAO();
+        List<RiderInfo> pendingRiders = riderDAO.getPendingRiders();
+        System.out.println("UI pending riders count: " + pendingRiders.size());
+        for (RiderInfo rider : pendingRiders) {
+            System.out.println("UI Rider: " + rider.getId() + ", " + rider.getFullName() + ", " + rider.getEmailOrMobile());
+        }
+
+        // Create main content panel
+        JPanel contentPanel = new JPanel();
+        contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
+        contentPanel.setBackground(Color.WHITE);
+        
+        if (pendingRiders.isEmpty()) {
+            JLabel noRidersLabel = new JLabel("No pending rider registrations found");
+            noRidersLabel.setHorizontalAlignment(JLabel.CENTER);
+            noRidersLabel.setFont(new Font("Arial", Font.ITALIC, 14));
+            riderApprovalContent.add(noRidersLabel, BorderLayout.CENTER);
+        } else {
+            // Add each rider as a panel with approve/reject buttons
+            for (RiderInfo rider : pendingRiders) {
+                JPanel riderPanel = createRiderPanel(rider);
+                contentPanel.add(riderPanel);
+                contentPanel.add(Box.createVerticalStrut(20));
+            }
+            
+            // Add content panel to scroll pane
+            JScrollPane scrollPane = new JScrollPane(contentPanel);
+            scrollPane.setBorder(BorderFactory.createEmptyBorder());
+            riderApprovalContent.add(scrollPane, BorderLayout.CENTER);
+        }
+        
+        // Add refresh button
+        JButton refreshButton = new JButton("Refresh");
+        refreshButton.addActionListener(e -> showRiderApprovalPanel());
+        JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        bottomPanel.add(refreshButton);
+        riderApprovalContent.add(bottomPanel, BorderLayout.SOUTH);
+        
+        riderApprovalContent.revalidate();
+        riderApprovalContent.repaint();
+        switchMainPanel("rider_approval", riderApprovalButton);
+    }
+    
+    private JPanel createRiderPanel(RiderInfo rider) {
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.setBackground(Color.WHITE);
+        panel.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(Color.LIGHT_GRAY),
+            BorderFactory.createEmptyBorder(10, 10, 10, 10)
+        ));
+        
+        // Rider info panel
+        JPanel infoPanel = new JPanel(new GridLayout(3, 2, 10, 5));
+        infoPanel.setBackground(Color.WHITE);
+        
+        infoPanel.add(new JLabel("Name:"));
+        infoPanel.add(new JLabel(rider.getFullName()));
+        
+        infoPanel.add(new JLabel("Contact:"));
+        infoPanel.add(new JLabel(rider.getEmailOrMobile()));
+        
+        infoPanel.add(new JLabel("Vehicle:"));
+        infoPanel.add(new JLabel(rider.getVehicleType() + " (" + rider.getVehicleRegistration() + ")"));
+        
+        panel.add(infoPanel, BorderLayout.CENTER);
+        
+        // Action buttons
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        buttonPanel.setBackground(Color.WHITE);
+        
+        JButton approveButton = new JButton("Approve");
+        approveButton.setBackground(new Color(76, 175, 80));
+        approveButton.setForeground(Color.WHITE);
+        approveButton.setBorderPainted(false);
+        approveButton.setFocusPainted(false);
+        approveButton.addActionListener(e -> approveRider(rider.getId(), rider.getEmailOrMobile()));
+        
+        JButton rejectButton = new JButton("Reject");
+        rejectButton.setBackground(new Color(244, 67, 54));
+        rejectButton.setForeground(Color.WHITE);
+        rejectButton.setBorderPainted(false);
+        rejectButton.setFocusPainted(false);
+        rejectButton.addActionListener(e -> rejectRider(rider.getId(), rider.getEmailOrMobile()));
+        
+        buttonPanel.add(approveButton);
+        buttonPanel.add(rejectButton);
+        
+        panel.add(buttonPanel, BorderLayout.SOUTH);
+        
+        return panel;
+    }
+    
+    // Method to approve a rider
+    private void approveRider(int riderId, String contactInfo) {
+        RiderDAO riderDAO = new RiderDAO();
+        boolean success = riderDAO.updateRiderStatus(riderId, "Active");
+        if (success) {
+            try {
+                if (contactInfo.contains("@")) {
+                    EmailUtil.sendEmail(
+                        contactInfo,
+                        "Rider Registration Approved",
+                        "Congratulations! Your rider registration has been approved. You can now log in to your account and start accepting deliveries."
+                    );
+                }
+                JOptionPane.showMessageDialog(this,
+                    "Rider approved successfully! Notification has been sent.",
+                    "Success",
+                    JOptionPane.INFORMATION_MESSAGE);
+                showRiderApprovalPanel();
+            } catch (Exception e) {
+                JOptionPane.showMessageDialog(this,
+                    "Rider approved but failed to send notification: " + e.getMessage(),
+                    "Partial Success",
+                    JOptionPane.WARNING_MESSAGE);
+            }
+        } else {
+            JOptionPane.showMessageDialog(this,
+                "Failed to approve rider. Please try again.",
+                "Error",
+                JOptionPane.ERROR_MESSAGE);
+        }
+    }
+    
+    // Method to reject a rider
+    private void rejectRider(int riderId, String contactInfo) {
+        RiderDAO riderDAO = new RiderDAO();
+        boolean success = riderDAO.updateRiderStatus(riderId, "Suspended");
+        if (success) {
+            try {
+                if (contactInfo.contains("@")) {
+                    EmailUtil.sendEmail(
+                        contactInfo,
+                        "Rider Registration Not Approved",
+                        "We regret to inform you that your rider registration has not been approved at this time. Please contact support for more information."
+                    );
+                }
+                JOptionPane.showMessageDialog(this,
+                    "Rider rejected successfully! Notification has been sent.",
+                    "Success",
+                    JOptionPane.INFORMATION_MESSAGE);
+                showRiderApprovalPanel();
+            } catch (Exception e) {
+                JOptionPane.showMessageDialog(this,
+                    "Rider rejected but failed to send notification: " + e.getMessage(),
+                    "Partial Success",
+                    JOptionPane.WARNING_MESSAGE);
+            }
+        } else {
+            JOptionPane.showMessageDialog(this,
+                "Failed to reject rider. Please try again.",
+                "Error",
+                JOptionPane.ERROR_MESSAGE);
+        }
     }
 }

@@ -1,76 +1,87 @@
 package nepxpress.database;
 
 /**
- * Class to hold rider information including both rider and user details
+ * Data class to hold rider information
  */
 public class RiderInfo {
-    private final int id;
-    private final int userId;
-    private final String firstName;
-    private final String surname;
-    private final String emailOrMobile;
-    private final String vehicleType;
-    private final String licenseNumber;
-    private final String vehicleRegistration;
-    private final String status;
+    private int id;
+    private String fullName;
+    private String emailOrMobile;
+    private String vehicleType;
+    private String licenseNumber;
+    private String vehicleRegistration;
     
-    public RiderInfo(int id, int userId, String firstName, String surname, 
-                    String emailOrMobile, String vehicleType, String licenseNumber, 
-                    String vehicleRegistration, String status) {
+    /**
+     * Constructor
+     * 
+     * @param id The rider's ID
+     * @param fullName The rider's full name
+     * @param emailOrMobile The rider's email or mobile number
+     * @param vehicleType The rider's vehicle type
+     * @param licenseNumber The rider's license number
+     * @param vehicleRegistration The rider's vehicle registration number
+     */
+    public RiderInfo(int id, String fullName, String emailOrMobile, String vehicleType, 
+                    String licenseNumber, String vehicleRegistration) {
         this.id = id;
-        this.userId = userId;
-        this.firstName = firstName;
-        this.surname = surname;
+        this.fullName = fullName;
         this.emailOrMobile = emailOrMobile;
         this.vehicleType = vehicleType;
         this.licenseNumber = licenseNumber;
         this.vehicleRegistration = vehicleRegistration;
-        this.status = status;
     }
     
+    /**
+     * Gets the rider's ID
+     * 
+     * @return The rider's ID
+     */
     public int getId() {
         return id;
     }
     
-    public int getUserId() {
-        return userId;
-    }
-    
-    public String getFirstName() {
-        return firstName;
-    }
-    
-    public String getSurname() {
-        return surname;
-    }
-    
+    /**
+     * Gets the rider's full name
+     * 
+     * @return The rider's full name
+     */
     public String getFullName() {
-        return firstName + " " + surname;
+        return fullName;
     }
     
+    /**
+     * Gets the rider's email or mobile number
+     * 
+     * @return The rider's email or mobile number
+     */
     public String getEmailOrMobile() {
         return emailOrMobile;
     }
     
+    /**
+     * Gets the rider's vehicle type
+     * 
+     * @return The rider's vehicle type
+     */
     public String getVehicleType() {
         return vehicleType;
     }
     
+    /**
+     * Gets the rider's license number
+     * 
+     * @return The rider's license number
+     */
     public String getLicenseNumber() {
         return licenseNumber;
     }
     
+    /**
+     * Gets the rider's vehicle registration number
+     * 
+     * @return The rider's vehicle registration number
+     */
     public String getVehicleRegistration() {
         return vehicleRegistration;
-    }
-    
-    public String getStatus() {
-        return status;
-    }
-    
-    @Override
-    public String toString() {
-        return String.format("%s %s (%s - %s)", 
-            firstName, surname, vehicleType, vehicleRegistration);
     }
 } 

@@ -7,6 +7,8 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.UUID;
+import static org.junit.Assert.*;
+
 
 public class PasswordResetDAO {
     

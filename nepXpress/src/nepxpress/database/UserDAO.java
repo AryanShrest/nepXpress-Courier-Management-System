@@ -10,6 +10,50 @@ import java.util.List;
 
 public class UserDAO {
     
+    /**
+     * Creates a user with minimal information (used for rider registrations)
+     * @param firstName First name
+     * @param lastName Last name
+     * @param email Email address
+     * @param mobile Mobile number
+     * @param accountType Account type (usually "rider")
+     * @return The user ID if successful, -1 otherwise
+     */
+    public int createUser(String firstName, String lastName, String email, String mobile, String accountType) {
+        String sql = "INSERT INTO users (first_name, surname, email_or_mobile, account_type) " +
+                     "VALUES (?, ?, ?, ?)";
+        
+        String contactInfo = email;
+        if (email == null || email.isEmpty()) {
+            contactInfo = mobile;
+        }
+        
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) {
+            
+            pstmt.setString(1, firstName);
+            pstmt.setString(2, lastName);
+            pstmt.setString(3, contactInfo);
+            pstmt.setString(4, accountType);
+            
+            int rowsAffected = pstmt.executeUpdate();
+            
+            if (rowsAffected > 0) {
+                try (ResultSet rs = pstmt.getGeneratedKeys()) {
+                    if (rs.next()) {
+                        return rs.getInt(1); // Return the inserted ID
+                    }
+                }
+            }
+            
+            return -1;
+            
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return -1;
+        }
+    }
+    
     public boolean createUser(String firstName, String surname, String emailOrMobile, 
                             String password, String dateOfBirth, String gender, String accountType) {
         String sql = "INSERT INTO users (first_name, surname, email_or_mobile, password, date_of_birth, gender, account_type) " +
@@ -202,6 +246,28 @@ public class UserDAO {
         } catch (SQLException e) {
             e.printStackTrace();
             return -1;
+        }
+    }
+    
+    public String getUserAccountType(int userId) {
+        String sql = "SELECT account_type FROM users WHERE id = ?";
+        
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            
+            pstmt.setInt(1, userId);
+            
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getString("account_type");
+                }
+            }
+            
+            return null;
+            
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return null;
         }
     }
 } 
